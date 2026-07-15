@@ -1,0 +1,297 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+
+export default function Page() {
+  // TODO: DELETE / PUT to revoke or update selected consent permissions (/api/v1/consent/revoke) from the consent registry.
+
+  const [consentActive, setConsentActive] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Interaction helpers for events inside the HTML designs
+  const openDetail = (eventId: string) => {
+    console.log('Opening details for:', eventId);
+    if (typeof document !== 'undefined') {
+      const rows = document.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        row.classList.remove('active-row', 'border-l-4', 'border-primary');
+      });
+    }
+  };
+
+  const openModal = () => {
+    if (typeof document !== 'undefined') {
+      const modal = document.getElementById('revocationModal');
+      const content = document.getElementById('modalContent');
+      if (modal && content) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          content.classList.remove('scale-95', 'opacity-0');
+          content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+      }
+    }
+  };
+
+  const closeModal = () => {
+    if (typeof document !== 'undefined') {
+      const content = document.getElementById('modalContent');
+      const modal = document.getElementById('revocationModal');
+      if (content && modal) {
+        content.classList.add('scale-95', 'opacity-0');
+        content.classList.remove('scale-100', 'opacity-100');
+        setTimeout(() => {
+          modal.classList.add('hidden');
+        }, 300);
+      }
+    }
+  };
+
+  const executeRevoke = () => {
+    closeModal();
+    if (typeof document !== 'undefined') {
+      const toast = document.getElementById('successToast');
+      if (toast) {
+        setTimeout(() => {
+          toast.classList.remove('translate-y-20', 'opacity-0');
+          setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+          }, 4000);
+        }, 400);
+      }
+    }
+  };
+
+  return (
+    <>
+      {/*  Predicted SideNavBar for UBL Digital Portal  */}
+      <aside className="h-screen w-72 fixed left-0 top-0 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
+      <div className="px-gutter mb-stack-lg flex items-center gap-3">
+      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>account_balance</span>
+      </div>
+      <div>
+      <h1 className="text-headline-sm font-headline-sm font-extrabold text-primary">UBL Digital</h1>
+      <p className="text-label-sm font-label-sm text-on-surface-variant">Enterprise Portal</p>
+      </div>
+      </div>
+      <nav className="flex-1 space-y-1">
+      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
+      <span className="material-symbols-outlined">group</span>
+      <span className="text-label-md font-label-md">Applicant Profiles</span>
+      </a>
+      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
+      <span className="material-symbols-outlined">monitoring</span>
+      <span className="text-label-md font-label-md">Shared Income Profiles</span>
+      </a>
+      <a className="flex items-center gap-4 py-3 px-6 text-primary font-bold bg-secondary-container/20 rounded-lg mx-2 transition-all duration-200 scale-[0.98x]" href="#">
+      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>fact_check</span>
+      <span className="text-label-md font-label-md">Consent Status</span>
+      </a>
+      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
+      <span className="material-symbols-outlined">history_edu</span>
+      <span className="text-label-md font-label-md">Audit Trail</span>
+      </a>
+      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
+      <span className="material-symbols-outlined">insights</span>
+      <span className="text-label-md font-label-md">Insights</span>
+      </a>
+      </nav>
+      <div className="px-gutter pt-stack-lg border-t border-outline-variant/30 mt-auto">
+      <button className="flex items-center gap-4 w-full py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg px-4">
+      <span className="material-symbols-outlined">switch_account</span>
+      <span className="text-label-md font-label-md">Profile Switcher</span>
+      </button>
+      </div>
+      </aside>
+      {/*  Main Canvas  */}
+      <main className="ml-72 min-h-screen">
+      {/*  Predicted TopAppBar  */}
+      <header className="flex justify-between items-center w-full px-margin-desktop h-16 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sticky top-0 z-40">
+      <div className="flex items-center gap-4">
+      <h2 className="text-headline-sm font-headline-sm font-bold text-primary">Consent Management</h2>
+      </div>
+      <div className="flex items-center gap-stack-md">
+      <button className="hover:bg-surface-container-high rounded-full p-2 transition-opacity">
+      <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
+      </button>
+      <div className="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-outline-variant">
+      <img className="w-full h-full object-cover" data-alt="A professional headshot of a corporate bank administrator wearing a charcoal suit, set against a blurred modern office background with soft teal and mint accents. The lighting is crisp and institutional, conveying authority and security in a modern digital banking environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXp3aRuaApsWL61-gPb_LdCFhrGA3Ws0KNlLQ7_AH4IeYJrlp0Y3mhb2ncy9ZrXI3fZobQS0BMCO_lFKYAB9SMm00Z26rL74-2Mz9iJHJ0p725wf88t0Sku7bGrXXxtSL6lnBtOmoNBALwofDVYcUCDQ9GdButvBhSqSssqVI8D3wTOPdMTR5CGBMKvXfW_yEHgaAEmLMiOOs5NbKmCH2AQWM_3qEvLTTfmHZs0nLzjP7oYhIoXtsmNg"/>
+      </div>
+      </div>
+      </header>
+      {/*  Content Area  */}
+      <div className="p-stack-lg max-w-container-max mx-auto">
+      {/*  Page Header  */}
+      <div className="flex items-end justify-between mb-stack-lg">
+      <div className="space-y-1">
+      <span className="text-label-md font-label-md text-secondary uppercase tracking-widest">Active Permissions</span>
+      <h3 className="text-headline-md font-headline-md text-on-surface">Digital Stewardship Dashboard</h3>
+      </div>
+      <div className="flex gap-stack-md">
+      <button className="px-stack-md py-2 border border-outline rounded-full text-label-md font-label-md text-on-surface hover:bg-surface-container-low transition-all">
+                              Download Audit Log
+                          </button>
+      </div>
+      </div>
+      {/*  Bento Grid Layout  */}
+      <div className="grid grid-cols-12 gap-gutter">
+      {/*  Main Consent Card (UBL Digital Lending)  */}
+      <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-8 border border-outline-variant/20 relative overflow-hidden">
+      {/*  Glassmorphic Accent  */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 relative z-10">
+      <div className="flex items-center gap-4">
+      <div className="w-16 h-16 rounded-xl bg-secondary-container/30 flex items-center justify-center text-secondary border border-secondary/20">
+      <span className="material-symbols-outlined text-[32px]">shield_with_heart</span>
+      </div>
+      <div>
+      <div className="flex items-center gap-2">
+      <h4 className="text-headline-sm font-headline-sm text-on-surface">UBL Digital Lending</h4>
+      <span className="material-symbols-outlined text-[18px] text-tertiary">verified</span>
+      </div>
+      <div className="flex items-center gap-3 mt-1">
+      <span className="px-3 py-1 bg-[#E8F5E9] text-[#004A3B] rounded-full text-[12px] font-bold">Active</span>
+      <span className="text-label-sm font-label-sm text-on-surface-variant">Last accessed: 2 hours ago</span>
+      </div>
+      </div>
+      </div>
+      <button className="mt-4 md:mt-0 px-6 py-3 border-2 border-error text-error rounded-xl font-bold text-label-md hover:bg-error/5 transition-all flex items-center gap-2" onClick={() => { openModal() }}>
+      <span className="material-symbols-outlined text-[20px]">no_accounts</span>
+                                  Revoke access
+                              </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+      <div className="space-y-2">
+      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Purpose</p>
+      <p className="text-body-lg font-body-lg text-on-surface font-semibold">Credit Assessment</p>
+      <p className="text-body-sm text-on-surface-variant leading-relaxed">Evaluation of financial health for a premium revolving credit line application.</p>
+      </div>
+      <div className="space-y-2">
+      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Scope</p>
+      <div className="flex flex-wrap gap-2">
+      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">All sources</span>
+      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">Tax Records</span>
+      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">Bank Feeds</span>
+      </div>
+      </div>
+      <div className="space-y-2">
+      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Expiry Date</p>
+      <p className="text-body-lg font-body-lg text-on-surface font-semibold">14 Jan 2027</p>
+      <p className="text-label-sm text-secondary font-medium">1,134 days remaining</p>
+      </div>
+      </div>
+      <div className="mt-10 p-4 bg-surface rounded-lg border border-outline-variant/30 flex items-center gap-4">
+      <span className="material-symbols-outlined text-secondary" style={{"fontVariationSettings":"'FILL' 1"}}>info</span>
+      <p className="text-body-sm text-on-surface-variant">This consent is protected by <strong>End-to-End Institutional Encryption</strong>. Data retrieval is limited to read-only access for the specified purpose.</p>
+      </div>
+      </div>
+      {/*  Side Stats / Info  */}
+      <div className="col-span-12 lg:col-span-4 space-y-gutter">
+      <div className="bg-primary-container text-on-primary-container p-stack-lg rounded-xl shadow-lg relative overflow-hidden group">
+      <div className="absolute inset-0 opacity-10 pointer-events-none transition-transform group-hover:scale-110 duration-700">
+      <div className="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/40 to-transparent"></div>
+      </div>
+      <h5 className="text-label-md font-label-md mb-2 opacity-80 uppercase">Trust Score</h5>
+      <div className="flex items-baseline gap-2 mb-4">
+      <span className="text-4xl font-bold tracking-tighter">98.4</span>
+      <span className="text-label-sm">Excellent</span>
+      </div>
+      <p className="text-body-sm opacity-90 leading-relaxed mb-6">Your consent hygiene is top-tier. Regular reviews enhance your financial security profile.</p>
+      <button className="w-full py-3 bg-on-primary-container text-primary-container rounded-lg font-bold text-label-md shadow-md">View Security Report</button>
+      </div>
+      <div className="bg-surface-container-lowest p-stack-lg rounded-xl border border-outline-variant/20 shadow-sm">
+      <h5 className="text-label-md font-label-md text-on-surface-variant mb-4 flex items-center gap-2">
+      <span className="material-symbols-outlined text-[18px]">history</span>
+                                  Recent Activity
+                              </h5>
+      <ul className="space-y-4">
+      <li className="flex gap-3">
+      <div className="w-2 h-2 rounded-full bg-secondary mt-2"></div>
+      <div>
+      <p className="text-body-sm font-semibold">Data ping by UBL</p>
+      <p className="text-label-sm text-on-surface-variant">Today, 10:45 AM</p>
+      </div>
+      </li>
+      <li className="flex gap-3">
+      <div className="w-2 h-2 rounded-full bg-outline-variant mt-2"></div>
+      <div>
+      <p className="text-body-sm font-semibold">Consent Renewed</p>
+      <p className="text-label-sm text-on-surface-variant">14 Nov 2023</p>
+      </div>
+      </li>
+      </ul>
+      </div>
+      </div>
+      </div>
+      {/*  Secondary Cards / Other Consents  */}
+      <div className="mt-stack-lg">
+      <h4 className="text-headline-sm font-headline-sm text-on-surface mb-stack-md">Other Consents</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+      <div className="glass-card p-stack-md rounded-xl border border-outline-variant/30 flex items-center gap-4 opacity-70 grayscale-[0.5]">
+      <div className="w-12 h-12 bg-surface-container rounded-lg flex items-center justify-center text-on-surface-variant">
+      <span className="material-symbols-outlined">payments</span>
+      </div>
+      <div>
+      <p className="font-bold text-on-surface">PayStream Inc</p>
+      <p className="text-label-sm text-on-surface-variant">Expired: 12 Dec 2023</p>
+      </div>
+      </div>
+      <div className="glass-card p-stack-md rounded-xl border border-outline-variant/30 flex items-center gap-4">
+      <div className="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary">
+      <span className="material-symbols-outlined">house</span>
+      </div>
+      <div>
+      <p className="font-bold text-on-surface">Hearth Mortgages</p>
+      <p className="text-label-sm text-on-surface-variant">Pending Renewal</p>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </main>
+      {/*  Revocation Modal  */}
+      <div className="fixed inset-0 z-[100] hidden flex items-center justify-center p-gutter" id="revocationModal">
+      <div className="modal-overlay absolute inset-0" onClick={() => { closeModal() }}></div>
+      <div className="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-[0px_12px_32px_rgba(0,74,59,0.08)] relative z-10 overflow-hidden transform scale-95 transition-all duration-300 opacity-0" id="modalContent">
+      <div className="p-8">
+      <div className="w-12 h-12 rounded-full bg-error-container/30 text-error flex items-center justify-center mb-6">
+      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>warning</span>
+      </div>
+      <h3 className="text-headline-sm font-headline-sm text-on-surface mb-2">Revoke UBL's access?</h3>
+      <p className="text-body-md text-on-surface-variant leading-relaxed">
+                          Access lost immediately, revocation recorded in audit trail. This action cannot be undone without a new application process.
+                      </p>
+      <div className="mt-8 flex flex-col gap-3">
+      <button className="w-full py-4 bg-error text-on-error rounded-xl font-bold text-label-md shadow-lg shadow-error/20 hover:bg-error/90 transition-all active:scale-95" onClick={() => { executeRevoke() }}>
+                              Confirm Revocation
+                          </button>
+      <button className="w-full py-3 bg-surface-container-high text-on-surface rounded-xl font-bold text-label-md hover:bg-surface-container-highest transition-all" onClick={() => { closeModal() }}>
+                              Keep Access
+                          </button>
+      </div>
+      </div>
+      {/*  Security Badge  */}
+      <div className="bg-surface-container text-center py-3">
+      <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest flex items-center justify-center gap-1">
+      <span className="material-symbols-outlined text-[14px]">lock</span> Secure Transaction via VaultTrust
+                      </p>
+      </div>
+      </div>
+      </div>
+      {/*  Success Toast (Hidden)  */}
+      <div className="fixed bottom-10 right-10 z-[110] translate-y-20 opacity-0 transition-all duration-500 pointer-events-none" id="successToast">
+      <div className="bg-surface-container-lowest border-l-4 border-secondary px-6 py-4 rounded-lg shadow-2xl flex items-center gap-4">
+      <span className="material-symbols-outlined text-secondary">check_circle</span>
+      <div>
+      <p className="font-bold text-on-surface">Consent Revoked</p>
+      <p className="text-body-sm text-on-surface-variant">The audit trail has been updated successfully.</p>
+      </div>
+      </div>
+      </div>
+    </>
+  );
+}
