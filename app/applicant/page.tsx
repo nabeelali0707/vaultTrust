@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import BankSidebar from "@/components/BankSidebar";
 
 export default function Page() {
   // TODO: Retrieve applicant financial stability metrics and verified monthly deposits (/api/v1/credit/underwrite) for the loan officer.
@@ -68,47 +69,9 @@ export default function Page() {
   return (
     <>
       {/*  SideNavBar (Authority: Institutional Modernism)  */}
-      <aside className="h-screen w-72 fixed left-0 top-0 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
-      <div className="px-6 mb-stack-lg">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
-      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>account_balance</span>
-      </div>
-      <div>
-      <h1 className="text-headline-sm font-headline-sm font-extrabold text-primary">UBL Digital</h1>
-      <p className="text-label-sm font-label-sm text-on-surface-variant">Enterprise Portal</p>
-      </div>
-      </div>
-      </div>
-      <nav className="flex-1 space-y-1">
-      <a className="flex items-center gap-3 py-3 px-6 text-primary font-bold bg-secondary-container/20 rounded-lg mx-2 transition-all duration-200" href="#">
-      <span className="material-symbols-outlined">group</span>
-      <span className="text-label-md font-label-md">Applicant Profiles</span>
-      </a>
-      <a className="flex items-center gap-3 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">monitoring</span>
-      <span className="text-label-md font-label-md">Shared Income Profiles</span>
-      </a>
-      <a className="flex items-center gap-3 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">fact_check</span>
-      <span className="text-label-md font-label-md">Consent Status</span>
-      </a>
-      <a className="flex items-center gap-3 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">history_edu</span>
-      <span className="text-label-md font-label-md">Audit Trail</span>
-      </a>
-      <a className="flex items-center gap-3 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">insights</span>
-      <span className="text-label-md font-label-md">Insights</span>
-      </a>
-      </nav>
-      <div className="px-6 pt-stack-lg mt-auto border-t border-outline-variant/30">
-      <div className="flex items-center gap-3 p-2 hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
-      <span className="material-symbols-outlined">switch_account</span>
-      <span className="text-label-md font-label-md text-on-surface-variant">Profile Switcher</span>
-      </div>
-      </div>
-      </aside>
+      
+      <BankSidebar />
+
       {/*  TopAppBar  */}
       <header className="fixed top-0 right-0 left-72 h-16 bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex justify-between items-center px-margin-desktop z-40">
       <div className="flex items-center gap-4">

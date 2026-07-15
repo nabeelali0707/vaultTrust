@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: Fetch immutable blockchain/database-anchored audit trail logs (/api/v1/audit/ledger) to verify digital proof.
@@ -68,59 +69,9 @@ export default function Page() {
   return (
     <>
       {/*  Predicted Component: SideNavBar  */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
-      <div className="px-6 mb-10">
-      <h1 className="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">VaultTrust</h1>
-      <p className="text-label-sm font-label-sm text-on-surface-variant opacity-70">Freelancer Portal</p>
-      </div>
-      <nav className="flex-grow">
-      <ul className="space-y-1">
-      <li>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md group" href="#">
-      <span className="material-symbols-outlined mr-3 group-hover:text-primary" data-icon="dashboard">dashboard</span>
-                              Overview
-                          </a>
-      </li>
-      <li>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md group" href="#">
-      <span className="material-symbols-outlined mr-3 group-hover:text-primary" data-icon="account_balance">account_balance</span>
-                              Connected Accounts
-                          </a>
-      </li>
-      <li>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md group" href="#">
-      <span className="material-symbols-outlined mr-3 group-hover:text-primary" data-icon="verified_user">verified_user</span>
-                              Consent Center
-                          </a>
-      </li>
-      <li>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md group" href="#">
-      <span className="material-symbols-outlined mr-3 group-hover:text-primary" data-icon="payments">payments</span>
-                              Income Profile
-                          </a>
-      </li>
-      <li>
-      {/*  Active State: Activity & Audit Trail  */}
-      <a className="flex items-center px-6 py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-primary-container/10 font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3" data-icon="receipt_long" style={{"fontVariationSettings":"'FILL' 1"}}>receipt_long</span>
-                              Activity &amp; Audit Trail
-                          </a>
-      </li>
-      <li>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md group" href="#">
-      <span className="material-symbols-outlined mr-3 group-hover:text-primary" data-icon="settings">settings</span>
-                              Settings
-                          </a>
-      </li>
-      </ul>
-      </nav>
-      <div className="px-6 mt-auto">
-      <button className="w-full bg-primary-container text-on-primary-container py-3 px-4 rounded-xl text-label-md font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all scale-100 active:scale-95">
-      <span className="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span>
-                      View Active Consents
-                  </button>
-      </div>
-      </aside>
+      
+      <FreelancerSidebar />
+
       {/*  Predicted Component: TopAppBar  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 ml-64 max-w-[calc(100%-16rem)] bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] fixed top-0 z-40">
       <div className="flex items-center gap-4">

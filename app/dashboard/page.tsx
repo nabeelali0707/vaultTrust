@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: Fetch live income streams and transactions from platform connectors (/api/v1/connectors/summary) to display real data.
@@ -67,46 +68,7 @@ export default function Page() {
 
   return (
     <>
-      {/*  SideNavBar Component  */}
-      <nav className="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
-      <div className="px-6 mb-10">
-      <h1 className="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">VaultTrust</h1>
-      <p className="text-label-sm font-label-sm text-on-surface-variant opacity-70">Freelancer Portal</p>
-      </div>
-      <div className="flex-1 space-y-2 px-2">
-      {/*  Active Tab: Overview  */}
-      <a className="flex items-center gap-3 px-4 py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-primary-container/10 transition-all duration-200 active:scale-[0.98]" href="#">
-      <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-      <span className="text-label-md font-label-md">Overview</span>
-      </a>
-      <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors rounded-lg mx-2 group" href="#">
-      <span className="material-symbols-outlined" data-icon="account_balance">account_balance</span>
-      <span className="text-label-md font-label-md">Connected Accounts</span>
-      </a>
-      <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors rounded-lg mx-2 group" href="#">
-      <span className="material-symbols-outlined" data-icon="verified_user">verified_user</span>
-      <span className="text-label-md font-label-md">Consent Center</span>
-      </a>
-      <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors rounded-lg mx-2 group" href="#">
-      <span className="material-symbols-outlined" data-icon="payments">payments</span>
-      <span className="text-label-md font-label-md">Income Profile</span>
-      </a>
-      <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors rounded-lg mx-2 group" href="#">
-      <span className="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
-      <span className="text-label-md font-label-md">Activity & Audit Trail</span>
-      </a>
-      <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container dark:hover:bg-surface-container-highest transition-colors rounded-lg mx-2 group" href="#">
-      <span className="material-symbols-outlined" data-icon="settings">settings</span>
-      <span className="text-label-md font-label-md">Settings</span>
-      </a>
-      </div>
-      <div className="px-4 mt-auto">
-      <button className="w-full bg-primary-container text-on-primary py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-bold hover:shadow-lg transition-all active:scale-95">
-      <span className="material-symbols-outlined" data-icon="visibility">visibility</span>
-      <span className="text-label-sm">View Active Consents</span>
-      </button>
-      </div>
-      </nav>
+      <FreelancerSidebar />
       {/*  TopAppBar Component  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 ml-64 max-w-[calc(100%-16rem)] fixed top-0 bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] z-40">
       <div className="flex items-center gap-4">

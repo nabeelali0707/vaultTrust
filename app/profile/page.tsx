@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: Fetch computed Trust Score and income reliability metrics (/api/v1/profile/reliability) based on linked accounts.
@@ -213,66 +214,9 @@ export default function Page() {
       </div>
       </section>
       {/*  Right Column: "What the Bank Sees"  */}
-      <aside className="col-span-12 lg:col-span-5 space-y-gutter">
-      <div className="glass-card rounded-card p-stack-lg shadow-[0px_12px_32px_rgba(0,74,59,0.08)]">
-      <div className="flex items-center gap-3 mb-6">
-      <span className="material-symbols-outlined text-primary" style={{"fontVariationSettings":"'FILL' 1"}}>visibility</span>
-      <h3 className="text-headline-sm font-headline-sm text-primary">What the bank sees</h3>
-      </div>
-      <p className="text-body-sm text-on-surface-variant mb-6">
-                                  Banks only receive aggregated verification tokens. Your raw transaction data remains private and locked in the vault.
-                              </p>
-      <div className="space-y-4">
-      <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl border border-white/60">
-      <span className="text-label-md font-label-md text-on-surface">Verified Identity</span>
-      <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-      </div>
-      <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl border border-white/60">
-      <span className="text-label-md font-label-md text-on-surface">6-Month Aggregate</span>
-      <span className="text-body-md font-bold text-primary">PKR 1.24M</span>
-      </div>
-      <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl border border-white/60">
-      <span className="text-label-md font-label-md text-on-surface">Stability Rating</span>
-      <span className="px-3 py-1 bg-primary text-white rounded-full text-[12px] font-bold">ALPHA+</span>
-      </div>
-      <div className="flex justify-between items-center p-4 bg-white/40 rounded-xl border border-white/60">
-      <span className="text-label-md font-label-md text-on-surface">Risk Token</span>
-      <code className="text-[11px] bg-surface-container px-2 py-1 rounded">vt_hash_7712...</code>
-      </div>
-      </div>
-      <div className="mt-8 pt-6 border-t border-surface-container">
-      <div className="flex items-center gap-4 text-primary group cursor-pointer">
-      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">security</span>
-      <span className="text-label-md font-label-md">Manage privacy &amp; consent</span>
-      </div>
-      </div>
-      </div>
-      {/*  Security Badge  */}
-      <div className="bg-surface-container p-stack-lg rounded-card flex items-center gap-stack-md border border-outline-variant/30">
-      <div className="p-3 bg-white rounded-full text-tertiary shadow-sm">
-      <span className="material-symbols-outlined text-[32px]">lock</span>
-      </div>
-      <div>
-      <h4 className="text-label-md font-label-md text-on-surface">Restricted Data Access</h4>
-      <p className="text-body-sm text-on-surface-variant">Zero-knowledge proof encryption active.</p>
-      </div>
-      </div>
-      {/*  Chart Placeholder Visual  */}
-      <div className="bg-surface-container-lowest rounded-card p-stack-lg shadow-sm h-48 overflow-hidden relative group">
-      <div className="flex justify-between items-center mb-4">
-      <h5 className="text-label-sm font-label-sm text-on-surface-variant uppercase">Earning Trajectory</h5>
-      <span className="text-primary font-bold text-label-sm">+4.2% MoM</span>
-      </div>
-      <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-primary/10 to-transparent"></div>
-      <svg className="w-full h-24 overflow-visible" viewBox="0 0 400 100">
-      <path className="drop-shadow-lg" d="M0,80 Q50,75 100,60 T200,45 T300,30 T400,10" fill="none" stroke="#004a3b" strokeLinecap="round" strokeWidth="3"></path>
-      <circle cx="100" cy="60" fill="#004a3b" r="4"></circle>
-      <circle cx="200" cy="45" fill="#004a3b" r="4"></circle>
-      <circle cx="300" cy="30" fill="#004a3b" r="4"></circle>
-      <circle cx="400" cy="10" fill="#004a3b" r="4"></circle>
-      </svg>
-      </div>
-      </aside>
+      
+      <FreelancerSidebar />
+
       </div>
       </div>
       </main>

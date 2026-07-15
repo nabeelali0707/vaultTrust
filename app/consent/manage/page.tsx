@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: DELETE / PUT to revoke or update selected consent permissions (/api/v1/consent/revoke) from the consent registry.
@@ -68,45 +69,9 @@ export default function Page() {
   return (
     <>
       {/*  Predicted SideNavBar for UBL Digital Portal  */}
-      <aside className="h-screen w-72 fixed left-0 top-0 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
-      <div className="px-gutter mb-stack-lg flex items-center gap-3">
-      <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
-      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>account_balance</span>
-      </div>
-      <div>
-      <h1 className="text-headline-sm font-headline-sm font-extrabold text-primary">UBL Digital</h1>
-      <p className="text-label-sm font-label-sm text-on-surface-variant">Enterprise Portal</p>
-      </div>
-      </div>
-      <nav className="flex-1 space-y-1">
-      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">group</span>
-      <span className="text-label-md font-label-md">Applicant Profiles</span>
-      </a>
-      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">monitoring</span>
-      <span className="text-label-md font-label-md">Shared Income Profiles</span>
-      </a>
-      <a className="flex items-center gap-4 py-3 px-6 text-primary font-bold bg-secondary-container/20 rounded-lg mx-2 transition-all duration-200 scale-[0.98x]" href="#">
-      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>fact_check</span>
-      <span className="text-label-md font-label-md">Consent Status</span>
-      </a>
-      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">history_edu</span>
-      <span className="text-label-md font-label-md">Audit Trail</span>
-      </a>
-      <a className="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-surface-container-high transition-colors mx-2 rounded-lg" href="#">
-      <span className="material-symbols-outlined">insights</span>
-      <span className="text-label-md font-label-md">Insights</span>
-      </a>
-      </nav>
-      <div className="px-gutter pt-stack-lg border-t border-outline-variant/30 mt-auto">
-      <button className="flex items-center gap-4 w-full py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg px-4">
-      <span className="material-symbols-outlined">switch_account</span>
-      <span className="text-label-md font-label-md">Profile Switcher</span>
-      </button>
-      </div>
-      </aside>
+      
+      <FreelancerSidebar />
+
       {/*  Main Canvas  */}
       <main className="ml-72 min-h-screen">
       {/*  Predicted TopAppBar  */}

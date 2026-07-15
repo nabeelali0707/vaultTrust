@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: Trigger OAuth handshake flow with Upwork, Fiverr, or Payoneer and handle the redirect callback to link accounts.
@@ -68,44 +69,9 @@ export default function Page() {
   return (
     <>
       {/*  SideNavBar Shell  */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
-      <div className="px-6 mb-10">
-      <h1 className="text-headline-md font-headline-md font-extrabold text-primary">VaultTrust</h1>
-      <p className="text-label-sm text-on-surface-variant">Freelancer Portal</p>
-      </div>
-      <nav className="flex-1 space-y-1">
-      <a className="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container transition-colors group" href="#">
-      <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">dashboard</span>
-      <span className="text-label-md">Overview</span>
-      </a>
-      <a className="flex items-center px-6 py-3 text-primary font-bold border-r-4 border-primary bg-primary-container/10 transition-all duration-200" href="#">
-      <span className="material-symbols-outlined mr-3 text-primary">account_balance</span>
-      <span className="text-label-md">Connected Accounts</span>
-      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container transition-colors group" href="#">
-      <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">verified_user</span>
-      <span className="text-label-md">Consent Center</span>
-      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container transition-colors group" href="#">
-      <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">payments</span>
-      <span className="text-label-md">Income Profile</span>
-      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container transition-colors group" href="#">
-      <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">receipt_long</span>
-      <span className="text-label-md">Activity & Audit Trail</span>
-      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant hover:bg-surface-container transition-colors group" href="#">
-      <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">settings</span>
-      <span className="text-label-md">Settings</span>
-      </a>
-      </nav>
-      <div className="px-4 mt-auto">
-      <button className="w-full py-4 bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all active:scale-95">
-      <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>verified</span>
-                      View Active Consents
-                  </button>
-      </div>
-      </aside>
+      
+      <FreelancerSidebar />
+
       {/*  TopAppBar Shell  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 ml-64 max-w-[calc(100%-16rem)] fixed top-0 bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] z-40">
       <div className="flex items-center gap-4">

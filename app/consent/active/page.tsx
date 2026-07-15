@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import FreelancerSidebar from "@/components/FreelancerSidebar";
 
 export default function Page() {
   // TODO: Fetch details of the currently active consent policy and platform connection status.
@@ -72,38 +73,9 @@ export default function Page() {
       {/*  Layout Shell  */}
       <div className="flex h-screen overflow-hidden">
       {/*  Sidebar Navigation (SideNavBar)  */}
-      <aside className="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-40">
-      <div className="px-6 mb-10">
-      <h1 className="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary tracking-tight">VaultTrust</h1>
-      <p className="text-label-sm font-label-sm text-on-surface-variant">Freelancer Portal</p>
-      </div>
-      <nav className="flex-1 space-y-2">
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3">dashboard</span> Overview
-                      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3">account_balance</span> Connected Accounts
-                      </a>
-      {/*  Active Item  */}
-      <a className="flex items-center px-6 py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-primary-container/10 font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3" style={{"fontVariationSettings":"'FILL' 1"}}>verified_user</span> Consent Center
-                      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3">payments</span> Income Profile
-                      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3">receipt_long</span> Activity &amp; Audit Trail
-                      </a>
-      <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#">
-      <span className="material-symbols-outlined mr-3">settings</span> Settings
-                      </a>
-      </nav>
-      <div className="px-6 mt-auto">
-      <button className="w-full bg-primary-container text-on-primary py-3 rounded-lg text-label-md font-label-md hover:opacity-90 transition-opacity">
-                          View Active Consents
-                      </button>
-      </div>
-      </aside>
+      
+      <FreelancerSidebar />
+
       {/*  Main Content Canvas  */}
       <main className="ml-64 flex-1 overflow-y-auto bg-surface relative">
       {/*  TopAppBar  */}
