@@ -52,11 +52,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-margin-mobile relative overflow-hidden select-none">
       {/* Dynamic Background Gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-tertiary/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary/10 rounded-full blur-[120px] pointer-events-none animate-float-bg" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[55vw] h-[55vw] bg-tertiary/5 rounded-full blur-[150px] pointer-events-none animate-float-bg delay-300" />
 
       {/* Main Container Card */}
-      <div className="bg-surface-container-low border border-outline-variant/20 rounded-[28px] p-8 max-w-md w-full shadow-2xl relative z-10">
+      <div className="bg-surface-container-low border border-outline-variant/20 rounded-[28px] p-8 max-w-md w-full shadow-2xl relative z-10 animate-slide-up">
         <div className="text-center mb-6">
           <h2 className="text-headline-md font-extrabold text-primary tracking-tight">
             Log In

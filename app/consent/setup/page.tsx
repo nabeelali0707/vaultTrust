@@ -320,7 +320,7 @@ export default function Page() {
               </div>
               </header>
               {/*  Main Content Canvas  */}
-              <main className="ml-64 pt-24 pb-12 px-margin-desktop max-w-[calc(100%-16rem)]">
+              <main className="ml-64 pt-24 pb-12 px-margin-desktop max-w-[calc(100%-16rem)] animate-fade-in">
               <div className="max-w-5xl mx-auto">
               {/*  Context Header Section  */}
               <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">

@@ -95,7 +95,7 @@ export default function Page() {
       <FreelancerSidebar />
 
       {/*  Main Content Canvas  */}
-      <main className="ml-64 flex-1 overflow-y-auto bg-surface relative">
+      <main className="ml-64 flex-1 overflow-y-auto bg-surface relative animate-fade-in">
       {/*  TopAppBar  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 bg-surface-container-lowest shadow-sm sticky top-0 z-30">
       <h2 className="text-headline-sm font-headline-sm font-bold text-primary">Success Status</h2>

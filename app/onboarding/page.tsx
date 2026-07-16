@@ -91,11 +91,11 @@ export default function Page() {
   return (
     <>
       {/*  Navigation Shell Suppressed for Transactional/Onboarding Flow as per instructions  */}
-      <main className="relative min-h-screen flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-stack-lg">
+      <main className="relative min-h-screen flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-stack-lg animate-slide-up">
       {/*  Subtle Background Aesthetic  */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-primary-fixed/20 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-[10%] -left-[10%] w-[500px] h-[500px] bg-secondary-fixed/20 rounded-full blur-3xl"></div>
+      <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] bg-primary-fixed/20 rounded-full blur-3xl animate-float-bg"></div>
+      <div className="absolute -bottom-[10%] -left-[10%] w-[500px] h-[500px] bg-secondary-fixed/20 rounded-full blur-3xl animate-float-bg" style={{animationDelay: "2s"}}></div>
       </div>
       <div className="w-full max-w-container-max z-10">
       {/*  Header Brand Anchor  */}

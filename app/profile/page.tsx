@@ -129,7 +129,7 @@ export default function Page() {
       </div>
       </nav>
       {/*  Main Content Canvas  */}
-      <main className="ml-64 min-h-screen">
+      <main className="ml-64 min-h-screen animate-fade-in">
       {/*  TopAppBar Execution  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sticky top-0 z-40">
       <h2 className="text-headline-sm font-headline-sm font-bold text-primary">Income Profile</h2>

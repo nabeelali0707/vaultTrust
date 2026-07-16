@@ -68,7 +68,7 @@ export default function Page() {
   return (
     <>
       
-            <div className="block lg:hidden">
+            <div className="block lg:hidden animate-fade-in">
               {/*  Top App Bar  */}
               <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-5 h-16 bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
               <div className="flex items-center gap-3">
@@ -251,7 +251,7 @@ export default function Page() {
               </nav>
               {/*  Interaction Script  */}
             </div>
-            <div className="hidden lg:block">
+            <div className="hidden lg:block animate-fade-in">
               {/*  Top Navigation (Shell suppressed for Landing context, using Landing Nav)  */}
               <nav className="sticky top-0 z-50 w-full px-margin-mobile md:px-margin-desktop h-20 flex justify-between items-center glass-card border-none">
               <div className="flex items-center gap-2">

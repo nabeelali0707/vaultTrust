@@ -110,7 +110,7 @@ export default function Page() {
       <FreelancerSidebar />
 
       {/*  Main Canvas  */}
-      <main className="ml-72 min-h-screen">
+      <main className="ml-72 min-h-screen animate-fade-in">
       {/*  Predicted TopAppBar  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 bg-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sticky top-0 z-40">
       <div className="flex items-center gap-4">

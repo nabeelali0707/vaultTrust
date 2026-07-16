@@ -127,7 +127,7 @@ export default function Page() {
       </div>
       </header>
       {/*  Main Content Canvas  */}
-      <main className="ml-64 mt-16 p-stack-lg min-h-screen">
+      <main className="ml-64 mt-16 p-stack-lg min-h-screen animate-fade-in">
       <div className="max-w-container-max mx-auto space-y-8">
       {/*  Welcome Header  */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">

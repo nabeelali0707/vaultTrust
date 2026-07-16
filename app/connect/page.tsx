@@ -139,7 +139,7 @@ export default function Page() {
       </div>
       </header>
       {/*  Main Content Canvas  */}
-      <main className="ml-64 pt-24 pb-stack-lg px-margin-desktop min-h-screen">
+      <main className="ml-64 pt-24 pb-stack-lg px-margin-desktop min-h-screen animate-fade-in">
       <div className="max-w-container-max mx-auto">
       {/*  Header Section  */}
       <div className="mb-stack-lg">

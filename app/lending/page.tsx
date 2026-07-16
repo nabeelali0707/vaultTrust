@@ -91,7 +91,7 @@ export default function Page() {
       <BankSidebar />
 
       {/*  Main Content Wrapper  */}
-      <main className="ml-72 flex-1 h-screen overflow-y-auto relative">
+      <main className="ml-72 flex-1 h-screen overflow-y-auto relative animate-fade-in">
       {/*  TopAppBar Component  */}
       <header className="flex justify-between items-center w-full px-margin-desktop h-16 bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] sticky top-0 z-40">
       <div className="flex items-center gap-4">

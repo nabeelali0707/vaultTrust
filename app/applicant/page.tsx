@@ -136,7 +136,7 @@ export default function Page() {
       </div>
       </header>
       {/*  Main Content Canvas  */}
-      <main className="ml-72 pt-24 px-margin-desktop pb-stack-lg bg-surface min-h-screen">
+      <main className="ml-72 pt-24 px-margin-desktop pb-stack-lg bg-surface min-h-screen animate-fade-in">
       
       {error ? (
         <div className="max-w-4xl mx-auto py-24 px-gutter flex flex-col items-center text-center">

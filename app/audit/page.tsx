@@ -123,7 +123,7 @@ export default function Page() {
       </div>
       </header>
       {/*  Main Content Canvas  */}
-      <main className="ml-64 mt-16 p-stack-lg min-h-screen flex gap-stack-lg bg-surface">
+      <main className="ml-64 mt-16 p-stack-lg min-h-screen flex gap-stack-lg bg-surface animate-fade-in">
       {/*  Audit Timeline & Table Section  */}
       <div className="flex-grow space-y-6">
       <div className="glass-card bg-surface-container-lowest rounded-[24px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden">
