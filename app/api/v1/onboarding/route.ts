@@ -60,21 +60,14 @@ export async function POST(request: Request) {
     // 4. Update the user document with the KYC status
     await dbService.updateUser(authUser.uid, { kycStatus: kycResult.status });
 
-    // 5. In local mode, set session cookie for test switcher support
-    const response = NextResponse.json({
+    // 5. Return success payload
+    return NextResponse.json({
       success: true,
       kycStatus: kycResult.status,
       userId: authUser.uid,
       role: finalRole,
       providerRef: kycResult.providerRef,
     });
-
-    response.cookies.set("x-user-id", authUser.uid, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-
-    return response;
   } catch (error: any) {
     console.error("Onboarding endpoint error:", error);
     if (error instanceof z.ZodError) {

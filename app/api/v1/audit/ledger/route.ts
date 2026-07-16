@@ -24,8 +24,8 @@ export async function GET(request: Request) {
     let isChainIntact = true;
 
     for (const cid of consentIds) {
-      // Run full chain integrity checks + Solana devnet memo validation
-      const verificationResults = await verifyLedgerChain(cid, true);
+      // Run full chain integrity checks
+      const verificationResults = await verifyLedgerChain(cid);
       
       for (const res of verificationResults) {
         verifiedEntries.push({

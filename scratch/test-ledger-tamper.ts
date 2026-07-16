@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { appendLedgerEntry, verifyLedgerChain } from "../lib/ledger";
 import { dbService, Consent } from "../lib/db";
 

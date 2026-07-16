@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
 
 const routes = [
   { href: "/", label: "Welcome", icon: "home" },
@@ -22,37 +20,17 @@ const routes = [
 
 export default function DevNav() {
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState("ahmed-raza-id");
 
-  useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )x-user-id=([^;]*)/);
-    if (match) {
-      setCurrentUser(match[1]);
-    }
-  }, []);
-
-  const handleUserChange = async (val: string) => {
-    document.cookie = `x-user-id=${val}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    
+  const handleLogout = async () => {
     if (auth) {
-      let email = "";
-      if (val === "ubl-bank-id") email = "ubl.officer@example.com";
-      else if (val === "sana-malik-id") email = "sana.malik@example.com";
-      else email = "ahmed.raza@example.com";
-      
       try {
-        await signInWithEmailAndPassword(auth, email, "password123");
-        console.log(`[DevNav] Signed in to Firebase Auth: ${email}`);
+        await auth.signOut();
+        // Clear cookies
+        document.cookie = "x-user-id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        window.location.href = "/login";
       } catch (err: any) {
-        console.warn(`[DevNav] Firebase Auth sign-in failed (local mode fallback active):`, err.message);
+        console.error("[DevNav] Logout failed:", err);
       }
-    }
-
-    setCurrentUser(val);
-    if (val === "ubl-bank-id") {
-      window.location.href = "/lending";
-    } else {
-      window.location.href = "/dashboard";
     }
   };
 
@@ -64,15 +42,13 @@ export default function DevNav() {
           <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
             Session
           </span>
-          <select
-            value={currentUser}
-            onChange={(e) => handleUserChange(e.target.value)}
-            className="bg-black/40 text-white text-[10px] font-semibold rounded-lg px-2 py-1 outline-none border border-white/10 cursor-pointer"
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1 bg-black/40 hover:bg-error-container/20 text-white hover:text-error text-[10px] font-semibold rounded-lg px-2.5 py-1.5 outline-none border border-white/10 cursor-pointer transition-colors"
           >
-            <option value="ahmed-raza-id" className="bg-[#003127] text-white">Ahmed Raza (Freelancer)</option>
-            <option value="sana-malik-id" className="bg-[#003127] text-white">Sana Malik (Freelancer)</option>
-            <option value="ubl-bank-id" className="bg-[#003127] text-white">UBL Bank Officer</option>
-          </select>
+            <span className="material-symbols-outlined text-[14px]">logout</span>
+            <span>Logout</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-1">

@@ -8,15 +8,28 @@ const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-const hasAdminConfig = !!(projectId && clientEmail && privateKey);
-
 let adminApp: any = null;
 
 export function getFirebaseAdmin() {
-  if (!hasAdminConfig) {
-    return null;
+  const missingServerVars: string[] = [];
+  if (!projectId) {
+    missingServerVars.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
   }
-  
+  if (!clientEmail) {
+    missingServerVars.push("FIREBASE_CLIENT_EMAIL");
+  }
+  if (!privateKey) {
+    missingServerVars.push("FIREBASE_PRIVATE_KEY");
+  }
+
+  if (missingServerVars.length > 0) {
+    throw new Error(
+      `Firebase Admin SDK Configuration Error. Missing environment variables: ${missingServerVars.join(
+        ", "
+      )}. Check your server-side environment configurations.`
+    );
+  }
+
   if (admin.apps.length === 0) {
     try {
       adminApp = admin.initializeApp({
@@ -26,9 +39,8 @@ export function getFirebaseAdmin() {
           privateKey,
         }),
       });
-    } catch (error) {
-      console.error("Failed to initialize Firebase Admin SDK:", error);
-      return null;
+    } catch (error: any) {
+      throw new Error(`Failed to initialize Firebase Admin SDK: ${error.message || error}`);
     }
   } else {
     adminApp = admin.apps[0];
@@ -37,11 +49,11 @@ export function getFirebaseAdmin() {
 }
 
 export function getAdminFirestore() {
-  const adminSdk = getFirebaseAdmin();
-  return adminSdk ? getFirestore() : null;
+  getFirebaseAdmin(); // will throw if variables are missing
+  return getFirestore();
 }
 
 export function getAdminAuth() {
-  const adminSdk = getFirebaseAdmin();
-  return adminSdk ? getAuth() : null;
+  getFirebaseAdmin(); // will throw if variables are missing
+  return getAuth();
 }
