@@ -226,27 +226,27 @@ export default function Page() {
               <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] md:hidden">
               <div className="flex justify-around items-center h-20 px-4">
               {/*  Active Home Tab  */}
-              <button className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-primary transition-all active:scale-95">
+              <Link href="/" className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-primary transition-all active:scale-95">
               <div className="bg-primary-container/20 rounded-full px-5 py-1 mb-0.5">
               <span className="material-symbols-outlined text-[24px]" data-icon="home" style={{"fontVariationSettings":"'FILL' 1"}}>home</span>
               </div>
               <span className="text-label-sm font-bold">Home</span>
-              </button>
+              </Link>
               {/*  Accounts Tab  */}
-              <button className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
+              <Link href="/connect" className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
               <span className="material-symbols-outlined text-[24px]" data-icon="account_balance">account_balance</span>
               <span className="text-label-sm font-label-sm">Accounts</span>
-              </button>
+              </Link>
               {/*  Consent Tab  */}
-              <button className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
+              <Link href="/consent/active" className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
               <span className="material-symbols-outlined text-[24px]" data-icon="verified_user">verified_user</span>
               <span className="text-label-sm font-label-sm">Consent</span>
-              </button>
+              </Link>
               {/*  Profile Tab  */}
-              <button className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
+              <Link href="/profile" className="flex flex-col items-center justify-center gap-1 min-w-[64px] text-on-surface-variant hover:text-primary transition-all active:scale-95">
               <span className="material-symbols-outlined text-[24px]" data-icon="person">person</span>
               <span className="text-label-sm font-label-sm">Profile</span>
-              </button>
+              </Link>
               </div>
               </nav>
               {/*  Interaction Script  */}
@@ -262,7 +262,9 @@ export default function Page() {
               <a className="text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">How it works</a>
               <a className="text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Security</a>
               <a className="text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">FAQ</a>
-              <button className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md hover:opacity-90 transition-opacity">Login</button>
+              <Link href="/dashboard">
+                <button className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md hover:opacity-90 transition-opacity">Login</button>
+              </Link>
               </div>
               <button className="md:hidden text-primary">
               <span className="material-symbols-outlined">menu</span>
@@ -278,18 +280,22 @@ export default function Page() {
               </div>
               <h1 className="text-headline-lg-mobile md:text-headline-lg font-extrabold text-primary leading-tight">
                                   Turn your freelance income into financial opportunity.
-                              </h1>
+                               </h1>
               <p className="text-body-lg text-on-surface-variant max-w-lg">
                                   Secure, consent-based income verification for Pakistani freelancers. Access formal banking services using your verifiable digital history.
-                              </p>
+                               </p>
               <div className="flex flex-col sm:flex-row gap-stack-md mt-4">
-              <button className="bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-lg hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
-                                      Get started as a freelancer
-                                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-              </button>
-              <button className="bg-surface-container-highest/50 border border-outline/20 text-primary px-8 py-4 rounded-xl font-label-md text-lg hover:bg-surface-container-highest transition-colors flex items-center justify-center">
-                                      View bank portal
-                                  </button>
+              <Link href="/dashboard">
+                <button className="bg-primary text-on-primary px-8 py-4 rounded-xl font-label-md text-lg hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
+                    Get started as a freelancer
+                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+              </Link>
+              <Link href="/lending">
+                <button className="bg-surface-container-highest/50 border border-outline/20 text-primary px-8 py-4 rounded-xl font-label-md text-lg hover:bg-surface-container-highest transition-colors flex items-center justify-center">
+                    View bank portal
+                </button>
+              </Link>
               </div>
               {/*  Trust Badges  */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-stack-md mt-12 border-t border-outline/10 pt-stack-lg">

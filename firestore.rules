@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper to check if a user is a bank officer
+    function isBankOfficer() {
+      return request.auth != null && request.auth.token.role == 'BANK_OFFICER';
+    }
+
+    // Helper to check if there is an active consent for a specific freelancer and bank officer
+    function hasActiveConsent(freelancerId) {
+      let consentId = freelancerId + '_' + request.auth.uid;
+      return exists(/databases/$(database)/documents/consents/$(consentId)) && 
+             get(/databases/$(database)/documents/consents/$(consentId)).data.status == 'ACTIVE';
+    }
+
+    // users/{uid}
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // freelancerProfiles/{uid}
+    match /freelancerProfiles/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // connectedSources/{uid}
+    match /connectedSources/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      
+      // subcollection sources
+      match /sources/{sourceId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // transactions/{uid}
+    match /transactions/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      
+      // subcollection sources/.../records
+      match /sources/{sourceId}/records/{txId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // consents/{consentId}
+    match /consents/{consentId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.freelancerId || 
+        (isBankOfficer() && request.auth.uid == resource.data.bankId)
+      );
+      // Only the freelancer can grant/create or update their consent document
+      allow create, update: if request.auth != null && request.auth.uid == request.resource.data.freelancerId;
+      allow delete: if false; // Consents are never deleted, only revoked (updated status to REVOKED)
+    }
+
+    // consentLedger/{consentId}/entries/{entryId}
+    match /consentLedger/{consentId}/entries/{entryId} {
+      // Rejects direct client writes entirely
+      allow write: if false;
+      
+      // Readable by the freelancer owner of the consent, or by the consented bank officer if ACTIVE
+      allow read: if request.auth != null && (
+        request.auth.uid == get(/databases/$(database)/documents/consents/$(consentId)).data.freelancerId ||
+        (isBankOfficer() && 
+         request.auth.uid == get(/databases/$(database)/documents/consents/$(consentId)).data.bankId && 
+         get(/databases/$(database)/documents/consents/$(consentId)).data.status == 'ACTIVE')
+      );
+    }
+
+    // incomeScores/{uid}
+    match /incomeScores/{uid} {
+      allow read: if request.auth != null && (
+        request.auth.uid == uid || 
+        (isBankOfficer() && hasActiveConsent(uid))
+      );
+      allow write: if false; // Written only via Admin SDK scoring calculations
+    }
+  }
+}

@@ -1,13 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import FreelancerSidebar from "@/components/FreelancerSidebar";
+import { normalizeAmountToPKR } from "@/lib/scoring";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: Fetch live income streams and transactions from platform connectors (/api/v1/connectors/summary) to display real data.
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<any>(null);
+  const [reliability, setReliability] = useState<any>(null);
+  const [consent, setConsent] = useState<any>(null);
 
-  const [consentActive, setConsentActive] = useState(true);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [summaryRes, reliabilityRes, consentRes] = await Promise.all([
+          fetchWithAuth("/api/v1/connectors/summary"),
+          fetchWithAuth("/api/v1/profile/reliability"),
+          fetchWithAuth("/api/v1/consent/active"),
+        ]);
+        const summaryData = await summaryRes.json();
+        const reliabilityData = await reliabilityRes.json();
+        const consentData = await consentRes.json();
+
+        if (summaryData.success) setSummary(summaryData);
+        if (reliabilityData.success) setReliability(reliabilityData);
+        if (consentData.success) setConsent(consentData.consent);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -66,6 +94,10 @@ export default function Page() {
     }
   };
 
+  const monthlyAggregates = summary?.monthlyAggregates || [];
+  const maxTotal = Math.max(...monthlyAggregates.map((m: any) => m.totalPKR), 1);
+  const connectedSourcesCount = summary?.connectedSources?.filter((s: any) => s.status === "CONNECTED").length || 0;
+
   return (
     <>
       <FreelancerSidebar />
@@ -87,8 +119,8 @@ export default function Page() {
       <div className="h-8 w-[1px] bg-outline-variant"></div>
       <div className="flex items-center gap-3">
       <div className="text-right hidden sm:block">
-      <p className="text-label-md font-label-md text-on-surface">Ahmed Khan</p>
-      <p className="text-label-sm font-label-sm text-on-surface-variant">Top-Rated Freelancer</p>
+      <p className="text-label-md font-label-md text-on-surface">{reliability?.userName || "Ahmed Raza"}</p>
+      <p className="text-label-sm font-label-sm text-on-surface-variant">Verified Freelancer</p>
       </div>
       <img className="w-10 h-10 rounded-full border-2 border-primary-fixed-dim object-cover" data-alt="A professional headshot of a young South Asian male freelancer, smiling warmly, wearing a crisp navy blazer over a white shirt, against a soft-focus minimalist office background with institutional modernism lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1ldjxntAmT-euIz_rJIZk-7m15v3MXxWPH1LSAwOUCA5Xl9C9jsCLaWyAXDOGoAV4u5XJKY0dRWr93oBbcuiumaQBngqXLtLAegN-aROuqPTAEvN6htJf6RdTFcU1zLi3AAF9HiKkJBBkYlKSZyvwmE6qe4ZMgJMuQskWsY8nRTydFJRI2IpQcnAoBGqKGb0ZjvHpfXtBmozh4KqxXpWhB42Sd0Vvwj5BztenhTEsfb9TmSfubVyCwA"/>
       </div>
@@ -100,18 +132,18 @@ export default function Page() {
       {/*  Welcome Header  */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-      <h2 className="text-headline-lg font-headline-lg text-primary">Good morning, Ahmed</h2>
+      <h2 className="text-headline-lg font-headline-lg text-primary">Good morning, {reliability?.userName?.split(" ")[0] || "Freelancer"}</h2>
       <p className="text-body-lg text-on-surface-variant">Here is your verified financial health and consent status for today.</p>
       </div>
       <div className="flex gap-3">
       <button className="flex items-center gap-2 px-6 py-3 border border-outline text-primary rounded-full font-bold hover:bg-surface-container transition-all">
       <span className="material-symbols-outlined" data-icon="download">download</span>
                               Export Statement
-                          </button>
+                           </button>
       <button className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:shadow-xl transition-all">
       <span className="material-symbols-outlined" data-icon="share">share</span>
                               Share Profile
-                          </button>
+                           </button>
       </div>
       </section>
       {/*  KPI Bento Grid  */}
@@ -125,11 +157,13 @@ export default function Page() {
       <span className="text-primary font-bold text-label-sm flex items-center gap-1">
       <span className="material-symbols-outlined text-[16px]" data-icon="trending_up">trending_up</span>
                                   +12%
-                              </span>
+                               </span>
       </div>
       <div>
       <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Verified Monthly Income</p>
-      <h3 className="text-headline-md font-headline-md mt-1">PKR 198,000</h3>
+      <h3 className="text-headline-md font-headline-md mt-1">
+        PKR {reliability?.scores?.avgMonthlyIncome?.toLocaleString() || "0"}
+      </h3>
       </div>
       </div>
       {/*  KPI 2  */}
@@ -139,13 +173,15 @@ export default function Page() {
       <span className="material-symbols-outlined" data-icon="verified">verified</span>
       </div>
       <div className="bg-primary-container/10 px-3 py-1 rounded-full">
-      <span className="text-primary font-bold text-label-sm">Growing</span>
+      <span className="text-primary font-bold text-label-sm">
+        {reliability?.scores?.trend || "STABLE"}
+      </span>
       </div>
       </div>
       <div>
       <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Verification Score</p>
       <div className="flex items-end gap-2 mt-1">
-      <h3 className="text-headline-md font-headline-md">82</h3>
+      <h3 className="text-headline-md font-headline-md">{reliability?.scores?.ivs || "0"}</h3>
       <span className="text-body-sm text-on-surface-variant mb-1.5">/ 100</span>
       </div>
       </div>
@@ -159,12 +195,16 @@ export default function Page() {
       </div>
       <div>
       <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Active Consent</p>
-      <h3 className="text-headline-sm font-headline-sm mt-1">UBL Bank</h3>
+      <h3 className="text-headline-sm font-headline-sm mt-1">
+        {consent ? "UBL Bank" : "No Active Consent"}
+      </h3>
       <div className="flex items-center gap-2 mt-2">
       <div className="flex-1 h-1.5 bg-surface-container rounded-full overflow-hidden">
-      <div className="w-[60%] h-full bg-tertiary-container"></div>
+      <div className="h-full bg-tertiary-container" style={{ width: consent ? "100%" : "0%" }}></div>
       </div>
-      <span className="text-label-sm font-label-sm">174 days left</span>
+      <span className="text-label-sm font-label-sm">
+        {consent ? (consent.scopeDuration === "ROLLING_6MO" ? "6 mo. rolling" : "One-time") : "Not shared"}
+      </span>
       </div>
       </div>
       </div>
@@ -203,60 +243,49 @@ export default function Page() {
       </div>
       </div>
       <div className="h-64 flex items-end justify-between gap-4 group">
-      {/*  Bar Feb  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[160px]">
-      <div className="h-[60%] bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer" title="Payoneer"></div>
-      <div className="h-[25%] bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer" title="Bank"></div>
-      <div className="h-[15%] bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer" title="Invoices"></div>
-      </div>
-      <span className="text-label-sm text-on-surface-variant">Feb</span>
-      </div>
-      {/*  Bar Mar  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[180px]">
-      <div className="h-[55%] bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[30%] bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[15%] bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      </div>
-      <span className="text-label-sm text-on-surface-variant">Mar</span>
-      </div>
-      {/*  Bar Apr  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[200px]">
-      <div className="h-[65%] bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[20%] bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[15%] bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      </div>
-      <span className="text-label-sm text-on-surface-variant">Apr</span>
-      </div>
-      {/*  Bar May  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[190px]">
-      <div className="h-[50%] bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[35%] bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[15%] bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      </div>
-      <span className="text-label-sm text-on-surface-variant">May</span>
-      </div>
-      {/*  Bar Jun  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[220px]">
-      <div className="h-[70%] bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[20%] bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      <div className="h-[10%] bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer"></div>
-      </div>
-      <span className="text-label-sm text-on-surface-variant">Jun</span>
-      </div>
-      {/*  Bar Jul (Current)  */}
-      <div className="flex-1 flex flex-col items-center gap-2">
-      <div className="w-full flex flex-col-reverse gap-0.5 h-full max-h-[240px]">
-      <div className="h-[60%] bg-primary rounded-t-lg hover:brightness-110 transition-all cursor-pointer shadow-lg shadow-primary/20"></div>
-      <div className="h-[30%] bg-secondary rounded-sm hover:brightness-110 transition-all cursor-pointer"></div>
-      <div className="h-[10%] bg-tertiary rounded-sm hover:brightness-110 transition-all cursor-pointer"></div>
-      </div>
-      <span className="text-label-md font-bold text-primary">Jul</span>
-      </div>
+      {monthlyAggregates.map((month: any, idx: number) => {
+        const isCurrent = idx === 5;
+        const total = month.totalPKR;
+        const heightPercent = Math.max(10, Math.round((total / maxTotal) * 100));
+        
+        const payoneerH = total > 0 ? (month.payoneerPKR / total) * 100 : 0;
+        const bankH = total > 0 ? (month.bankPKR / total) * 100 : 0;
+        const invoiceH = total > 0 ? (month.invoicePKR / total) * 100 : 0;
+
+        return (
+          <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+            <div 
+              className="w-full flex flex-col-reverse gap-0.5" 
+              style={{ height: `${heightPercent}%` }}
+            >
+              {month.payoneerPKR > 0 && (
+                <div 
+                  className={`bg-primary rounded-sm hover:opacity-80 transition-all cursor-pointer ${isCurrent ? 'rounded-t shadow-lg' : ''}`} 
+                  style={{ height: `${payoneerH}%` }} 
+                  title={`Payoneer: PKR ${Math.round(month.payoneerPKR).toLocaleString()}`}
+                ></div>
+              )}
+              {month.bankPKR > 0 && (
+                <div 
+                  className="bg-secondary rounded-sm hover:opacity-80 transition-all cursor-pointer" 
+                  style={{ height: `${bankH}%` }} 
+                  title={`Direct Bank: PKR ${Math.round(month.bankPKR).toLocaleString()}`}
+                ></div>
+              )}
+              {month.invoicePKR > 0 && (
+                <div 
+                  className="bg-tertiary rounded-sm hover:opacity-80 transition-all cursor-pointer" 
+                  style={{ height: `${invoiceH}%` }} 
+                  title={`Local Invoices: PKR ${Math.round(month.invoicePKR).toLocaleString()}`}
+                ></div>
+              )}
+            </div>
+            <span className={`text-label-sm ${isCurrent ? 'font-bold text-primary' : 'text-on-surface-variant'}`}>
+              {month.monthLabel}
+            </span>
+          </div>
+        );
+      })}
       </div>
       </div>
       {/*  Source Doughnut Card  */}
@@ -272,22 +301,22 @@ export default function Page() {
       <circle className="transition-all duration-1000" cx="96" cy="96" fill="transparent" r="80" stroke="#735c00" strokeDasharray="502" strokeDashoffset="480" strokeWidth="18"></circle>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-      <span className="text-headline-md font-headline-md">3</span>
+      <span className="text-headline-md font-headline-md">{connectedSourcesCount}</span>
       <span className="text-label-sm text-on-surface-variant uppercase">Major Channels</span>
       </div>
       </div>
       <div className="mt-8 space-y-3">
       <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary"></span><span className="text-body-sm">Global Marketplace</span></div>
-      <span className="text-label-md font-bold">62%</span>
+      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary"></span><span className="text-body-sm">Global Payoneer</span></div>
+      <span className="text-label-md font-bold">{summary?.sourceMix?.payoneerPercent || 0}%</span>
       </div>
       <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-secondary"></span><span className="text-body-sm">Enterprise Direct</span></div>
-      <span className="text-label-md font-bold">28%</span>
+      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-secondary"></span><span className="text-body-sm">Enterprise Direct Bank</span></div>
+      <span className="text-label-md font-bold">{summary?.sourceMix?.bankPercent || 0}%</span>
       </div>
       <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-tertiary"></span><span className="text-body-sm">Local Retainers</span></div>
-      <span className="text-label-md font-bold">10%</span>
+      <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-tertiary"></span><span className="text-body-sm">Local Retainer Invoices</span></div>
+      <span className="text-label-md font-bold">{summary?.sourceMix?.invoicePercent || 0}%</span>
       </div>
       </div>
       </div>
@@ -297,40 +326,29 @@ export default function Page() {
       {/*  Activity Feed  */}
       <div className="bg-surface-container-lowest p-8 rounded-[24px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-6">
-      <h4 className="text-headline-sm font-headline-sm text-primary">Recent Activity</h4>
-      <button className="text-primary text-label-md font-bold hover:underline">View All</button>
+      <h4 className="text-headline-sm font-headline-sm text-primary">Recent Transactions</h4>
+      <Link href="/profile" className="text-primary text-label-md font-bold hover:underline">View All</Link>
       </div>
       <div className="space-y-6">
-      <div className="flex gap-4">
-      <div className="mt-1 w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
-      <span className="material-symbols-outlined text-[20px]" data-icon="link">link</span>
-      </div>
-      <div>
-      <p className="text-body-md font-bold">Account connected</p>
-      <p className="text-body-sm text-on-surface-variant">Payoneer account ****4291 successfully synced via secure API.</p>
-      <p className="text-label-sm text-outline mt-1">2 hours ago</p>
-      </div>
-      </div>
-      <div className="flex gap-4">
-      <div className="mt-1 w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary flex-shrink-0">
-      <span className="material-symbols-outlined text-[20px]" data-icon="task_alt">task_alt</span>
-      </div>
-      <div>
-      <p className="text-body-md font-bold">Consent granted</p>
-      <p className="text-body-sm text-on-surface-variant">Income verification access provided to UBL Digital Mortgage Department.</p>
-      <p className="text-label-sm text-outline mt-1">Yesterday, 4:15 PM</p>
-      </div>
-      </div>
-      <div className="flex gap-4">
-      <div className="mt-1 w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary flex-shrink-0">
-      <span className="material-symbols-outlined text-[20px]" data-icon="history_edu">history_edu</span>
-      </div>
-      <div>
-      <p className="text-body-md font-bold">Ledger reference generated</p>
-      <p className="text-body-sm text-on-surface-variant">Hash <span className="font-mono text-[12px] bg-surface p-0.5 rounded">0x88...f2a9</span> committed for Q3 income proof.</p>
-      <p className="text-label-sm text-outline mt-1">July 18, 2023</p>
-      </div>
-      </div>
+      {(summary?.recentTransactions || []).slice(0, 3).map((tx: any) => (
+        <div key={tx.id} className="flex gap-4">
+          <div className="mt-1 w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+            <span className="material-symbols-outlined text-[20px]">
+              {tx.sourceId.includes("payoneer") ? "payments" : tx.sourceId.includes("bank") ? "account_balance" : "description"}
+            </span>
+          </div>
+          <div>
+            <p className="text-body-md font-bold">{tx.clientLabel}</p>
+            <p className="text-body-sm text-on-surface-variant font-medium">
+              Received {tx.currency} {tx.amount.toLocaleString()} ({Math.round(normalizeAmountToPKR(tx.amount, tx.currency)).toLocaleString()} PKR equivalent)
+            </p>
+            <p className="text-label-sm text-outline mt-1">{new Date(tx.date).toLocaleDateString()}</p>
+          </div>
+        </div>
+      ))}
+      {(!summary || !summary.recentTransactions || summary.recentTransactions.length === 0) && (
+        <p className="text-body-md text-on-surface-variant italic">No recent activity. Connect a source to view transactions.</p>
+      )}
       </div>
       </div>
       {/*  Ledger & Verification CTA  */}
@@ -344,10 +362,12 @@ export default function Page() {
       <h4 className="text-headline-md font-headline-md mb-2">Institutional-Grade Identity</h4>
       <p className="text-body-lg text-primary-fixed mb-8 max-w-md">Your income profile is protected by multi-signature ledger technology and bank-grade encryption.</p>
       <div className="flex">
-      <button className="bg-white text-primary px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-primary-fixed transition-colors">
-                                      View full income profile
-                                      <span className="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
-      </button>
+      <Link href="/profile">
+        <button className="bg-white text-primary px-8 py-4 rounded-full font-bold flex items-center gap-2 hover:bg-primary-fixed transition-colors">
+                                        View trust profile
+                                        <span className="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+        </button>
+      </Link>
       </div>
       </div>
       </div>

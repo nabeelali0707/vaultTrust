@@ -1,0 +1,171 @@
+{
+  "users": [],
+  "profiles": [],
+  "sources": [],
+  "transactions": [],
+  "consents": [
+    {
+      "id": "test-consent-tamper-id",
+      "freelancerId": "freelancer-tamper",
+      "bankId": "bank-tamper",
+      "sources": [
+        "PAYONEER"
+      ],
+      "scope": "ALL",
+      "duration": "ONE_TIME",
+      "purpose": "TEST",
+      "status": "ACTIVE",
+      "grantedAt": "2026-07-16T08:10:47.303Z",
+      "revokedAt": null
+    },
+    {
+      "id": "test-consent-tamper-1784189470141",
+      "freelancerId": "freelancer-tamper",
+      "bankId": "bank-tamper",
+      "sources": [
+        "PAYONEER"
+      ],
+      "scope": "ALL",
+      "duration": "ONE_TIME",
+      "purpose": "TEST",
+      "status": "ACTIVE",
+      "grantedAt": "2026-07-16T08:11:10.142Z",
+      "revokedAt": null
+    }
+  ],
+  "ledger": [
+    {
+      "id": "block_580a5345f59a93b1",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:10:08.953Z",
+      "payloadHash": "3d67495f1c358e069ef75c964b1478c25bcb7193400ed0527b2c425390e42cb6",
+      "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "thisHash": "9a77ebaa10eeeae2aff9361e7d90e95f5f79c47c572a99a9526d355d107000d1",
+      "solanaTxSignature": "simulated_solana_signature_b9e91f5fb6758ebc",
+      "payload": {
+        "scopes": [
+          "PAYONEER"
+        ]
+      }
+    },
+    {
+      "id": "block_2170e9923183d5f8",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "BANK_ACCESS",
+      "timestamp": "2026-07-16T08:10:09.051Z",
+      "payloadHash": "e32e5d8018ac08194a41c9c1c0f088439e54ccb41fe5a554b25e296b150704cb",
+      "prevHash": "2df20bf93cfa9e18248eb1db39573d51a71f49bccbd6a4f087c0bad3b7dbf067",
+      "thisHash": "41f31fda80940aae635bd25de3a34a959232341c1f6c8677b0d7bdab6702a0b0",
+      "solanaTxSignature": "simulated_solana_signature_25f4bb5b6540da5c",
+      "payload": {
+        "accessedBy": "bank-tamper"
+      }
+    },
+    {
+      "id": "block_6037eecd78177fc1",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:10:09.008Z",
+      "payloadHash": "5b3843d6ca8db7ed758b7e146cdae45ec2cf0551c7ee478237596af067769348",
+      "prevHash": "9a77ebaa10eeeae2aff9361e7d90e95f5f79c47c572a99a9526d355d107000d1",
+      "thisHash": "2df20bf93cfa9e18248eb1db39573d51a71f49bccbd6a4f087c0bad3b7dbf067",
+      "solanaTxSignature": "simulated_solana_signature_2428a7b3548d65b0",
+      "payload": {
+        "scopes": [
+          "PAYONEER",
+          "BANK_TRANSFER"
+        ]
+      }
+    },
+    {
+      "id": "block_7d501d6a0efe3c32",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:10:47.317Z",
+      "payloadHash": "3d67495f1c358e069ef75c964b1478c25bcb7193400ed0527b2c425390e42cb6",
+      "prevHash": "41f31fda80940aae635bd25de3a34a959232341c1f6c8677b0d7bdab6702a0b0",
+      "thisHash": "b339ad3380f343a9a3e0ca827398764b6b42a707665292092042b85534521154",
+      "solanaTxSignature": "simulated_solana_signature_1fe653eb7bdcd531",
+      "payload": {
+        "scopes": [
+          "PAYONEER"
+        ]
+      }
+    },
+    {
+      "id": "block_91187b3c7eb7fad3",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "BANK_ACCESS",
+      "timestamp": "2026-07-16T08:10:47.331Z",
+      "payloadHash": "e32e5d8018ac08194a41c9c1c0f088439e54ccb41fe5a554b25e296b150704cb",
+      "prevHash": "cc5c6cca73e66948f03959db65dd61af4586416ffd9b61611a432a18983a3f7a",
+      "thisHash": "30757297fa1cfa825c03888ea313c73c4a9654c585762148a906f1967da5b8ab",
+      "solanaTxSignature": "simulated_solana_signature_d4bb85170d0d7063",
+      "payload": {
+        "accessedBy": "bank-tamper"
+      }
+    },
+    {
+      "id": "block_00de3c4386cddbd3",
+      "consentId": "test-consent-tamper-id",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:10:47.327Z",
+      "payloadHash": "5b3843d6ca8db7ed758b7e146cdae45ec2cf0551c7ee478237596af067769348",
+      "prevHash": "b339ad3380f343a9a3e0ca827398764b6b42a707665292092042b85534521154",
+      "thisHash": "cc5c6cca73e66948f03959db65dd61af4586416ffd9b61611a432a18983a3f7a",
+      "solanaTxSignature": "simulated_solana_signature_8c7b6b0e1a68d39c",
+      "payload": {
+        "scopes": [
+          "PAYONEER",
+          "BANK_TRANSFER"
+        ]
+      }
+    },
+    {
+      "id": "block_917e4c1fc653f059",
+      "consentId": "test-consent-tamper-1784189470141",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:11:10.186Z",
+      "payloadHash": "3d67495f1c358e069ef75c964b1478c25bcb7193400ed0527b2c425390e42cb6",
+      "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "thisHash": "09de6b6f06f7a5139bc70a4358181be93f019175ba3c3d778e2a19eb83fc949e",
+      "solanaTxSignature": "simulated_solana_signature_75a5d029b1f395ab",
+      "payload": {
+        "scopes": [
+          "PAYONEER"
+        ]
+      }
+    },
+    {
+      "id": "block_99f6d91fd7f107b5",
+      "consentId": "test-consent-tamper-1784189470141",
+      "eventType": "BANK_ACCESS",
+      "timestamp": "2026-07-16T08:11:10.269Z",
+      "payloadHash": "e32e5d8018ac08194a41c9c1c0f088439e54ccb41fe5a554b25e296b150704cb",
+      "prevHash": "b3b4a035ff021f205f673e61b93cd9a8bf7de152e0a3c1a489809d15a630c253",
+      "thisHash": "491607297104f2ac953b346c5840407ee98724bc1ab22318138a42ab2543b0f7",
+      "solanaTxSignature": "simulated_solana_signature_1cb0778f7a6be073",
+      "payload": {
+        "accessedBy": "bank-tamper"
+      }
+    },
+    {
+      "id": "block_969e550f50271589",
+      "consentId": "test-consent-tamper-1784189470141",
+      "eventType": "GRANT",
+      "timestamp": "2026-07-16T08:11:10.220Z",
+      "payloadHash": "5b3843d6ca8db7ed758b7e146cdae45ec2cf0551c7ee478237596af067769348",
+      "prevHash": "09de6b6f06f7a5139bc70a4358181be93f019175ba3c3d778e2a19eb83fc949e",
+      "thisHash": "b3b4a035ff021f205f673e61b93cd9a8bf7de152e0a3c1a489809d15a630c253",
+      "solanaTxSignature": "simulated_solana_signature_7e138dfee7d25069",
+      "payload": {
+        "scopes": [
+          "PAYONEER",
+          "BANK_TRANSFER"
+        ]
+      }
+    }
+  ],
+  "scores": []
+}

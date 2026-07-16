@@ -1,13 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import BankSidebar from "@/components/BankSidebar";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: POST verification profile data to the lending decision engine (/api/v1/lending/assess) for real-time application processing.
+  const [applicants, setApplicants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [consentActive, setConsentActive] = useState(true);
+  useEffect(() => {
+    const loadApplicants = async () => {
+      try {
+        const res = await fetchWithAuth("/api/v1/lending/assess");
+        const data = await res.json();
+        if (data.success) {
+          setApplicants(data.applicants);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadApplicants();
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -101,27 +119,38 @@ export default function Page() {
       <div className="glass-card p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col justify-between">
       <div>
       <p className="text-label-md font-label-md text-on-surface-variant opacity-70">Profiles Shared</p>
-      <h3 className="text-headline-md font-headline-md mt-2">124</h3>
+      <h3 className="text-headline-md font-headline-md mt-2">{applicants.length}</h3>
       </div>
       <div className="mt-4 flex items-center gap-2 text-primary font-semibold text-label-sm">
       <span className="material-symbols-outlined text-[18px]">trending_up</span>
-      <span>+12% this month</span>
+      <span>Total registered profiles</span>
       </div>
       </div>
       <div className="glass-card p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col justify-between">
       <div>
       <p className="text-label-md font-label-md text-on-surface-variant opacity-70">Active Consents</p>
-      <h3 className="text-headline-md font-headline-md mt-2 text-primary">98</h3>
+      <h3 className="text-headline-md font-headline-md mt-2 text-primary">
+        {applicants.filter((a) => a.consentStatus === "ACTIVE").length}
+      </h3>
       </div>
       <div className="mt-4 flex items-center gap-2 text-on-surface-variant opacity-60 text-label-sm">
       <span className="material-symbols-outlined text-[18px]">verified_user</span>
-      <span>79% conversion rate</span>
+      <span>Authorized access granted</span>
       </div>
       </div>
       <div className="glass-card p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col justify-between overflow-hidden relative">
       <div className="relative z-10">
       <p className="text-label-md font-label-md text-on-surface-variant opacity-70">Avg IVS Score</p>
-      <h3 className="text-headline-md font-headline-md mt-2 text-secondary">74</h3>
+      <h3 className="text-headline-md font-headline-md mt-2 text-secondary">
+        {applicants.filter((a) => a.consentStatus === "ACTIVE").length > 0
+          ? Math.round(
+              applicants
+                .filter((a) => a.consentStatus === "ACTIVE")
+                .reduce((sum, a) => sum + a.ivs, 0) /
+                applicants.filter((a) => a.consentStatus === "ACTIVE").length
+            )
+          : 0}
+      </h3>
       </div>
       <div className="mt-4 flex items-center gap-2 text-label-sm">
       <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
@@ -135,12 +164,14 @@ export default function Page() {
       </div>
       <div className="bg-error-container/20 p-6 rounded-2xl shadow-sm border border-error/10 flex flex-col justify-between">
       <div>
-      <p className="text-label-md font-label-md text-error">Expiring Soon</p>
-      <h3 className="text-headline-md font-headline-md mt-2 text-error">12</h3>
+      <p className="text-label-md font-label-md text-error">Locked / Revoked</p>
+      <h3 className="text-headline-md font-headline-md mt-2 text-error">
+        {applicants.filter((a) => a.consentStatus !== "ACTIVE").length}
+      </h3>
       </div>
-      <button className="mt-4 text-error font-bold text-label-sm underline underline-offset-4 hover:opacity-80 transition-opacity">
-                              Review expirations
-                          </button>
+      <div className="mt-4 text-on-surface-variant opacity-60 text-label-sm">
+        Consent revoked or not established
+      </div>
       </div>
       </div>
       {/*  Filters and Search  */}
@@ -188,142 +219,112 @@ export default function Page() {
       </tr>
       </thead>
       <tbody className="divide-y divide-outline-variant/10">
-      {/*  Highlighted Row  */}
-      <tr className="bg-primary-container/[0.03] hover:bg-primary-container/[0.06] transition-colors">
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-primary-fixed-dim flex items-center justify-center font-bold text-primary">AR</div>
-      <div>
-      <p className="text-body-md font-semibold text-on-surface">Ahmed Raza</p>
-      <p className="text-label-sm text-on-surface-variant opacity-70">UBL-672901-PK</p>
-      </div>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex flex-col">
-      <span className="text-body-md font-bold text-primary">PKR 198k</span>
-      <span className="text-label-sm text-on-surface-variant">Monthly Avg.</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-2">
-      <div className="px-2.5 py-1 bg-secondary-container text-on-secondary-container rounded-lg font-bold text-body-sm">
-                                                  82
-                                              </div>
-      <span className="text-label-sm text-secondary font-medium">Excellent</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-1 text-primary">
-      <span className="material-symbols-outlined text-[20px]">trending_up</span>
-      <span className="text-label-sm font-semibold">Growing</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed/40 text-on-primary-fixed-variant text-label-sm font-bold">
-      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                                              Active
-                                          </span>
-      </td>
-      <td className="px-6 py-5 text-on-surface-variant text-body-sm">
-                                          14 Oct 2023
-                                      </td>
-      <td className="px-6 py-5 text-right">
-      <button className="px-4 py-2 bg-surface-container-lowest border border-primary text-primary font-bold text-label-md rounded-lg hover:bg-primary hover:text-white transition-all active:scale-95 shadow-sm">
-                                              View profile
-                                          </button>
-      </td>
-      </tr>
-      {/*  Standard Row 1  */}
-      <tr className="hover:bg-surface-container-low transition-colors">
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-on-surface-variant">ZK</div>
-      <div>
-      <p className="text-body-md font-semibold text-on-surface">Zoya Khan</p>
-      <p className="text-label-sm text-on-surface-variant opacity-70">UBL-112908-PK</p>
-      </div>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex flex-col">
-      <span className="text-body-md font-bold text-on-surface">PKR 145k</span>
-      <span className="text-label-sm text-on-surface-variant">Monthly Avg.</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-2">
-      <div className="px-2.5 py-1 bg-surface-container-highest text-on-surface-variant rounded-lg font-bold text-body-sm">
-                                                  68
-                                              </div>
-      <span className="text-label-sm text-on-surface-variant font-medium">Standard</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-1 text-on-surface-variant opacity-50">
-      <span className="material-symbols-outlined text-[20px]">horizontal_rule</span>
-      <span className="text-label-sm font-semibold">Stable</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant text-label-sm font-bold">
-                                              Active
-                                          </span>
-      </td>
-      <td className="px-6 py-5 text-on-surface-variant text-body-sm">
-                                          12 Oct 2023
-                                      </td>
-      <td className="px-6 py-5 text-right">
-      <button className="px-4 py-2 bg-surface-container-lowest border border-outline text-outline text-label-md rounded-lg hover:bg-surface-container-high transition-all active:scale-95">
-                                              View profile
-                                          </button>
-      </td>
-      </tr>
-      {/*  Standard Row 2  */}
-      <tr className="hover:bg-surface-container-low transition-colors opacity-75">
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-on-surface-variant">SI</div>
-      <div>
-      <p className="text-body-md font-semibold text-on-surface">Saad Iqbal</p>
-      <p className="text-label-sm text-on-surface-variant opacity-70">UBL-882190-PK</p>
-      </div>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex flex-col">
-      <span className="text-body-md font-bold text-on-surface">PKR 210k</span>
-      <span className="text-label-sm text-on-surface-variant">Monthly Avg.</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-2">
-      <div className="px-2.5 py-1 bg-surface-container-highest text-on-surface-variant rounded-lg font-bold text-body-sm">
-                                                  72
-                                              </div>
-      <span className="text-label-sm text-on-surface-variant font-medium">Good</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <div className="flex items-center gap-1 text-error">
-      <span className="material-symbols-outlined text-[20px]">trending_down</span>
-      <span className="text-label-sm font-semibold">Declining</span>
-      </div>
-      </td>
-      <td className="px-6 py-5">
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container/40 text-on-error-container text-label-sm font-bold">
-                                              Expiring
-                                          </span>
-      </td>
-      <td className="px-6 py-5 text-on-surface-variant text-body-sm">
-                                          09 Oct 2023
-                                      </td>
-      <td className="px-6 py-5 text-right">
-      <button className="px-4 py-2 bg-surface-container-lowest border border-outline text-outline text-label-md rounded-lg hover:bg-surface-container-high transition-all active:scale-95">
-                                              View profile
-                                          </button>
-      </td>
-      </tr>
+      {applicants.map((app: any) => {
+        const initials = app.name
+          .split(" ")
+          .map((n: string) => n[0])
+          .join("")
+          .substring(0, 2)
+          .toUpperCase();
+        return (
+          <tr key={app.id} className="hover:bg-surface-container-low transition-colors">
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center font-bold text-primary">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-body-md font-semibold text-on-surface">{app.name}</p>
+                  <p className="text-label-sm text-on-surface-variant opacity-70">
+                    VT-{app.id.substring(0, 8).toUpperCase()}
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex flex-col">
+                <span className="text-body-md font-bold text-primary">
+                  {app.consentStatus === "ACTIVE"
+                    ? `PKR ${Math.round(app.avgMonthlyIncome).toLocaleString()}`
+                    : "🔒 LOCKED"}
+                </span>
+                <span className="text-label-sm text-on-surface-variant">Monthly Avg.</span>
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-2">
+                <div className="px-2.5 py-1 bg-secondary-container text-on-secondary-container rounded-lg font-bold text-body-sm">
+                  {app.consentStatus === "ACTIVE" ? app.ivs : "🔒"}
+                </div>
+                <span className="text-label-sm text-secondary font-medium">
+                  {app.consentStatus === "ACTIVE"
+                    ? app.ivs >= 80
+                      ? "Excellent"
+                      : app.ivs >= 60
+                      ? "Good"
+                      : "Standard"
+                    : "No Consent"}
+                </span>
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-1 text-primary">
+                <span className="material-symbols-outlined text-[20px]">
+                  {app.trend === "GROWING"
+                    ? "trending_up"
+                    : app.trend === "DECLINING"
+                    ? "trending_down"
+                    : "horizontal_rule"}
+                </span>
+                <span className="text-label-sm font-semibold capitalize">
+                  {app.trend.toLowerCase()}
+                </span>
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-sm font-bold ${
+                  app.consentStatus === "ACTIVE"
+                    ? "bg-[#E8F5E9] text-[#004D40]"
+                    : "bg-surface-container-highest text-on-surface-variant"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    app.consentStatus === "ACTIVE" ? "bg-[#004D40]" : "bg-outline"
+                  }`}
+                ></span>
+                {app.consentStatus === "ACTIVE" ? "Consented" : "No Consent"}
+              </span>
+            </td>
+            <td className="px-6 py-5 text-on-surface-variant text-body-sm">
+              {app.grantedAt
+                ? new Date(app.grantedAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "N/A"}
+            </td>
+            <td className="px-6 py-5 text-right">
+              {app.consentStatus === "ACTIVE" ? (
+                <Link href={`/applicant?freelancerId=${app.id}`}>
+                  <button className="px-4 py-2 bg-primary text-on-primary font-bold text-label-md rounded-lg hover:shadow-lg transition-all active:scale-95 shadow-sm">
+                    View profile
+                  </button>
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="px-4 py-2 bg-surface-container-high text-on-surface-variant/40 font-bold text-label-md rounded-lg cursor-not-allowed"
+                >
+                  Locked
+                </button>
+              )}
+            </td>
+          </tr>
+        );
+      })}
       </tbody>
       </table>
       </div>

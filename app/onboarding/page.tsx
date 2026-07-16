@@ -2,9 +2,32 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: POST verification consent metadata and trigger background KYC verification flow for onboarding.
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleOnboard = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchWithAuth("/api/v1/onboarding", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push("/connect");
+      } else {
+        alert("KYC Onboarding failed: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error initiating KYC onboarding.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [consentActive, setConsentActive] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -228,9 +251,13 @@ export default function Page() {
       </div>
       {/*  Primary Action Footer  */}
       <div className="mt-16 flex flex-col items-center">
-      <button className="group relative px-10 py-5 bg-primary text-on-primary rounded-full font-headline-sm flex items-center gap-4 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300" onClick={() => { window.location.reload() }}>
-      <span>Continue to Connect Sources</span>
-      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      <button 
+        disabled={loading}
+        className="group relative px-10 py-5 bg-primary text-on-primary rounded-full font-headline-sm flex items-center gap-4 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-75" 
+        onClick={handleOnboard}
+      >
+        <span>{loading ? "Verifying..." : "Continue to Connect Sources"}</span>
+        <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
       </button>
       <p className="mt-6 text-label-sm font-label-sm text-on-surface-variant flex items-center gap-2">
       <span className="material-symbols-outlined text-[16px] text-tertiary">info</span>

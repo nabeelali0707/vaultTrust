@@ -1,13 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import FreelancerSidebar from "@/components/FreelancerSidebar";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: DELETE / PUT to revoke or update selected consent permissions (/api/v1/consent/revoke) from the consent registry.
+  const [activeConsent, setActiveConsent] = useState<any>(null);
+  const [consentActive, setConsentActive] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [consentActive, setConsentActive] = useState(true);
+  useEffect(() => {
+    const fetchActive = async () => {
+      try {
+        const res = await fetchWithAuth("/api/v1/consent/active");
+        const data = await res.json();
+        if (data.success && data.consent) {
+          setActiveConsent(data.consent);
+          setConsentActive(true);
+        } else {
+          setConsentActive(false);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchActive();
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -51,18 +73,33 @@ export default function Page() {
     }
   };
 
-  const executeRevoke = () => {
-    closeModal();
-    if (typeof document !== 'undefined') {
-      const toast = document.getElementById('successToast');
-      if (toast) {
-        setTimeout(() => {
-          toast.classList.remove('translate-y-20', 'opacity-0');
-          setTimeout(() => {
-            toast.classList.add('translate-y-20', 'opacity-0');
-          }, 4000);
-        }, 400);
+  const executeRevoke = async () => {
+    try {
+      const res = await fetchWithAuth("/api/v1/consent/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consentId: activeConsent?.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setConsentActive(false);
+        setActiveConsent(null);
+        closeModal();
+        if (typeof document !== 'undefined') {
+          const toast = document.getElementById('successToast');
+          if (toast) {
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+              toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+          }
+        }
+      } else {
+        alert("Failed to revoke: " + data.error);
       }
+    } catch (err) {
+      console.error(err);
+      alert("Error revoking consent.");
     }
   };
 
@@ -105,55 +142,74 @@ export default function Page() {
       {/*  Bento Grid Layout  */}
       <div className="grid grid-cols-12 gap-gutter">
       {/*  Main Consent Card (UBL Digital Lending)  */}
-      <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-8 border border-outline-variant/20 relative overflow-hidden">
-      {/*  Glassmorphic Accent  */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 relative z-10">
-      <div className="flex items-center gap-4">
-      <div className="w-16 h-16 rounded-xl bg-secondary-container/30 flex items-center justify-center text-secondary border border-secondary/20">
-      <span className="material-symbols-outlined text-[32px]">shield_with_heart</span>
-      </div>
-      <div>
-      <div className="flex items-center gap-2">
-      <h4 className="text-headline-sm font-headline-sm text-on-surface">UBL Digital Lending</h4>
-      <span className="material-symbols-outlined text-[18px] text-tertiary">verified</span>
-      </div>
-      <div className="flex items-center gap-3 mt-1">
-      <span className="px-3 py-1 bg-[#E8F5E9] text-[#004A3B] rounded-full text-[12px] font-bold">Active</span>
-      <span className="text-label-sm font-label-sm text-on-surface-variant">Last accessed: 2 hours ago</span>
-      </div>
-      </div>
-      </div>
-      <button className="mt-4 md:mt-0 px-6 py-3 border-2 border-error text-error rounded-xl font-bold text-label-md hover:bg-error/5 transition-all flex items-center gap-2" onClick={() => { openModal() }}>
-      <span className="material-symbols-outlined text-[20px]">no_accounts</span>
-                                  Revoke access
-                              </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-      <div className="space-y-2">
-      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Purpose</p>
-      <p className="text-body-lg font-body-lg text-on-surface font-semibold">Credit Assessment</p>
-      <p className="text-body-sm text-on-surface-variant leading-relaxed">Evaluation of financial health for a premium revolving credit line application.</p>
-      </div>
-      <div className="space-y-2">
-      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Scope</p>
-      <div className="flex flex-wrap gap-2">
-      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">All sources</span>
-      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">Tax Records</span>
-      <span className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm">Bank Feeds</span>
-      </div>
-      </div>
-      <div className="space-y-2">
-      <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Expiry Date</p>
-      <p className="text-body-lg font-body-lg text-on-surface font-semibold">14 Jan 2027</p>
-      <p className="text-label-sm text-secondary font-medium">1,134 days remaining</p>
-      </div>
-      </div>
-      <div className="mt-10 p-4 bg-surface rounded-lg border border-outline-variant/30 flex items-center gap-4">
-      <span className="material-symbols-outlined text-secondary" style={{"fontVariationSettings":"'FILL' 1"}}>info</span>
-      <p className="text-body-sm text-on-surface-variant">This consent is protected by <strong>End-to-End Institutional Encryption</strong>. Data retrieval is limited to read-only access for the specified purpose.</p>
-      </div>
-      </div>
+      {consentActive && activeConsent ? (
+        <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-8 border border-outline-variant/20 relative overflow-hidden">
+        {/*  Glassmorphic Accent  */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 relative z-10">
+        <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-xl bg-secondary-container/30 flex items-center justify-center text-secondary border border-secondary/20">
+        <span className="material-symbols-outlined text-[32px]">shield_with_heart</span>
+        </div>
+        <div>
+        <div className="flex items-center gap-2">
+        <h4 className="text-headline-sm font-headline-sm text-on-surface">
+          {activeConsent.bankId === "ubl-bank-id" ? "UBL Digital Lending" : activeConsent.bankId}
+        </h4>
+        <span className="material-symbols-outlined text-[18px] text-tertiary">verified</span>
+        </div>
+        <div className="flex items-center gap-3 mt-1">
+        <span className="px-3 py-1 bg-[#E8F5E9] text-[#004A3B] rounded-full text-[12px] font-bold">Active</span>
+        <span className="text-label-sm font-label-sm text-on-surface-variant">Last accessed: Just now</span>
+        </div>
+        </div>
+        </div>
+        <button className="mt-4 md:mt-0 px-6 py-3 border-2 border-error text-error rounded-xl font-bold text-label-md hover:bg-error/5 transition-all flex items-center gap-2" onClick={() => { openModal() }}>
+        <span className="material-symbols-outlined text-[20px]">no_accounts</span>
+                                    Revoke access
+                                </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+        <div className="space-y-2">
+        <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Purpose</p>
+        <p className="text-body-lg font-body-lg text-on-surface font-semibold">{activeConsent.purpose}</p>
+        <p className="text-body-sm text-on-surface-variant leading-relaxed">Evaluation of freelancer income consistency for loan limits.</p>
+        </div>
+        <div className="space-y-2">
+        <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Scope</p>
+        <div className="flex flex-wrap gap-2">
+        {activeConsent.sources.map((s: string) => (
+          <span key={s} className="px-2 py-1 bg-surface-container text-on-surface rounded text-label-sm uppercase font-bold">{s}</span>
+        ))}
+        </div>
+        </div>
+        <div className="space-y-2">
+        <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Expiry Date</p>
+        <p className="text-body-lg font-body-lg text-on-surface font-semibold">
+          {new Date(activeConsent.expiresAt).toLocaleDateString("en-GB", {day: "numeric", month: "short", year: "numeric"})}
+        </p>
+        <p className="text-label-sm text-secondary font-medium">
+          {Math.ceil((new Date(activeConsent.expiresAt).getTime() - Date.now()) / (1000 * 3600 * 24))} days remaining
+        </p>
+        </div>
+        </div>
+        <div className="mt-10 p-4 bg-surface rounded-lg border border-outline-variant/30 flex items-center gap-4">
+        <span className="material-symbols-outlined text-secondary" style={{"fontVariationSettings":"'FILL' 1"}}>info</span>
+        <p className="text-body-sm text-on-surface-variant">This consent is protected by <strong>End-to-End Institutional Encryption</strong>. Data retrieval is limited to read-only access for the specified purpose.</p>
+        </div>
+        </div>
+      ) : (
+        <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-8 border border-outline-variant/20 text-center flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant mb-4">
+            <span className="material-symbols-outlined text-3xl">gavel</span>
+          </div>
+          <h4 className="text-headline-sm font-headline-sm text-on-surface mb-2">No Active Consent Policies</h4>
+          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">You do not have any active data sharing consent policy with UBL or other banks.</p>
+          <Link href="/consent/setup">
+            <button className="bg-primary text-on-primary px-6 py-3 rounded-lg font-bold">Set up new policy</button>
+          </Link>
+        </div>
+      )}
       {/*  Side Stats / Info  */}
       <div className="col-span-12 lg:col-span-4 space-y-gutter">
       <div className="bg-primary-container text-on-primary-container p-stack-lg rounded-xl shadow-lg relative overflow-hidden group">

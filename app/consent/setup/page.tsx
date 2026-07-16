@@ -2,9 +2,55 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: POST selected consents and platform permissions configuration (/api/v1/consent/grant) to store consent policy.
+  const router = useRouter();
+  const [sources, setSources] = useState({
+    PAYONEER: true,
+    BANK_TRANSFER: true,
+    LOCAL_INVOICING: false,
+  });
+  const [duration, setDuration] = useState<"ONE_TIME" | "ROLLING_6MO">("ROLLING_6MO");
+  const [loading, setLoading] = useState(false);
+
+  const handleToggle = (platform: "PAYONEER" | "BANK_TRANSFER" | "LOCAL_INVOICING") => {
+    setSources((prev) => ({
+      ...prev,
+      [platform]: !prev[platform],
+    }));
+  };
+
+  const handleGrant = async () => {
+    setLoading(true);
+    const activeSources = Object.keys(sources).filter(
+      (key) => sources[key as keyof typeof sources]
+    );
+    try {
+      const res = await fetchWithAuth("/api/v1/consent/grant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sources: activeSources,
+          scopeDuration: duration,
+          purpose: "Credit card and personal financing assessment",
+          bankId: "ubl-bank-id",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push("/consent/active");
+      } else {
+        alert("Failed to grant consent: " + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error granting consent.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [consentActive, setConsentActive] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -71,7 +117,7 @@ export default function Page() {
             <div className="block lg:hidden">
               {/*  Top Navigation (Shell suppressed for focused task as per mandate)  */}
               <header className="sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-md px-margin-mobile py-4 flex items-center justify-between shadow-sm">
-              <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
+              <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-high transition-colors">
               <span className="material-symbols-outlined text-on-surface">arrow_back</span>
               </button>
               <span className="font-headline-sm text-headline-sm text-primary tracking-tight">VaultTrust</span>
@@ -128,7 +174,7 @@ export default function Page() {
               </div>
               </div>
               <div className="relative inline-block w-12 h-6 transition duration-200 ease-in">
-              <input defaultChecked={true} className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
+              <input checked={sources.PAYONEER} onChange={() => handleToggle("PAYONEER")} className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
               <div className="toggle-slot block w-full h-full bg-outline-variant rounded-full transition-colors duration-200">
               <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200"></div>
               </div>
@@ -146,7 +192,7 @@ export default function Page() {
               </div>
               </div>
               <div className="relative inline-block w-12 h-6 transition duration-200 ease-in">
-              <input defaultChecked={true} className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
+              <input checked={sources.BANK_TRANSFER} onChange={() => handleToggle("BANK_TRANSFER")} className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
               <div className="toggle-slot block w-full h-full bg-outline-variant rounded-full transition-colors duration-200">
               <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200"></div>
               </div>
@@ -164,7 +210,7 @@ export default function Page() {
               </div>
               </div>
               <div className="relative inline-block w-12 h-6 transition duration-200 ease-in">
-              <input className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
+              <input checked={sources.LOCAL_INVOICING} onChange={() => handleToggle("LOCAL_INVOICING")} className="toggle-checkbox absolute block w-0 h-0 opacity-0" type="checkbox"/>
               <div className="toggle-slot block w-full h-full bg-outline-variant rounded-full transition-colors duration-200">
               <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200"></div>
               </div>
@@ -175,18 +221,30 @@ export default function Page() {
               <section className="mt-stack-lg p-stack-md bg-surface-container-low rounded-[24px]">
               <h3 className="text-label-md font-label-md text-on-surface mb-stack-sm">Consent Summary</h3>
               <div className="space-y-3">
-              <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-[18px]" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-              <p className="text-body-sm font-body-sm text-on-surface-variant">Sharing <span className="font-bold text-primary">Institutional Records</span></p>
-              </div>
-              <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-[18px]" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-              <p className="text-body-sm font-body-sm text-on-surface-variant">Sharing <span className="font-bold text-primary">Identity Verification</span></p>
-              </div>
-              <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-outline text-[18px]">cancel</span>
-              <p className="text-body-sm font-body-sm text-outline">NOT sharing <span className="font-bold">Contact List &amp; Metadata</span></p>
-              </div>
+              {sources.BANK_TRANSFER && (
+                <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[18px]" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
+                <p className="text-body-sm font-body-sm text-on-surface-variant">Sharing <span className="font-bold text-primary">Bank Records</span></p>
+                </div>
+              )}
+              {sources.PAYONEER && (
+                <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[18px]" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
+                <p className="text-body-sm font-body-sm text-on-surface-variant">Sharing <span className="font-bold text-primary">Payoneer Records</span></p>
+                </div>
+              )}
+              {sources.LOCAL_INVOICING && (
+                <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[18px]" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
+                <p className="text-body-sm font-body-sm text-on-surface-variant">Sharing <span className="font-bold text-primary">Local Invoices</span></p>
+                </div>
+              )}
+              {!sources.LOCAL_INVOICING && (
+                <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-outline text-[18px]">cancel</span>
+                <p className="text-body-sm font-body-sm text-outline">NOT sharing <span className="font-bold">Local Invoices</span></p>
+                </div>
+              )}
               </div>
               <div className="mt-4 pt-4 border-t border-outline-variant/30">
               <div className="flex items-center gap-2 text-tertiary">
@@ -206,8 +264,8 @@ export default function Page() {
               </main>
               {/*  Fixed Bottom Button  */}
               <div className="fixed bottom-0 left-0 right-0 p-margin-mobile bg-surface/90 backdrop-blur-xl border-t border-outline-variant/10">
-              <button className="w-full bg-primary-container text-on-primary font-headline-sm py-5 rounded-[20px] shadow-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group">
-              <span>Grant secure consent</span>
+              <button disabled={loading} onClick={handleGrant} className="w-full bg-primary-container text-on-primary font-headline-sm py-5 rounded-[20px] shadow-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group disabled:opacity-75">
+              <span>{loading ? "Granting..." : "Grant secure consent"}</span>
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </button>
               <p className="text-center text-label-sm font-label-sm text-on-surface-variant mt-4 opacity-70">
@@ -219,41 +277,32 @@ export default function Page() {
               {/*  Sidebar Navigation (Identity Lock: Consent Center Active)  */}
               <aside className="h-screen w-64 fixed left-0 top-0 bg-surface dark:bg-inverse-surface shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col py-stack-lg z-50">
               <div className="px-6 mb-10">
-              <h1 className="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">VaultTrust</h1>
+              <Link href="/dashboard" className="text-headline-md font-headline-md font-extrabold text-primary dark:text-inverse-primary">VaultTrust</Link>
               <p className="text-label-md font-label-md text-on-surface-variant">Freelancer Portal</p>
               </div>
               <nav className="flex-grow space-y-1">
-              <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="#">
+              <Link className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="/dashboard">
               <span className="material-symbols-outlined mr-3">dashboard</span>
               <span className="text-label-md font-label-md">Overview</span>
-              </a>
-              <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="#">
+              </Link>
+              <Link className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="/connect">
               <span className="material-symbols-outlined mr-3">account_balance</span>
               <span className="text-label-md font-label-md">Connected Accounts</span>
-              </a>
+              </Link>
               {/*  Active State  */}
-              <a className="flex items-center px-6 py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-primary-container/10 transition-all duration-200" href="#">
+              <Link className="flex items-center px-6 py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary dark:border-inverse-primary bg-primary-container/10 transition-all duration-200" href="/consent/setup">
               <span className="material-symbols-outlined mr-3" style={{"fontVariationSettings":"'FILL' 1"}}>verified_user</span>
               <span className="text-label-md font-label-md">Consent Center</span>
-              </a>
-              <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="#">
+              </Link>
+              <Link className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="/profile">
               <span className="material-symbols-outlined mr-3">payments</span>
               <span className="text-label-md font-label-md">Income Profile</span>
-              </a>
-              <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="#">
+              </Link>
+              <Link className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="/audit">
               <span className="material-symbols-outlined mr-3">receipt_long</span>
               <span className="text-label-md font-label-md">Activity &amp; Audit Trail</span>
-              </a>
-              <a className="flex items-center px-6 py-3 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container transition-colors" href="#">
-              <span className="material-symbols-outlined mr-3">settings</span>
-              <span className="text-label-md font-label-md">Settings</span>
-              </a>
+              </Link>
               </nav>
-              <div className="px-6 pt-6 mt-auto border-t border-outline-variant/30">
-              <button className="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
-                              View Active Consents
-                          </button>
-              </div>
               </aside>
               {/*  Top App Bar  */}
               <header className="flex justify-between items-center w-full px-margin-desktop h-16 ml-64 max-w-[calc(100%-16rem)] bg-surface-container-lowest dark:bg-surface-container-lowest shadow-[0px_4px_20px_rgba(0,0,0,0.04)] fixed top-0 z-40">
@@ -309,9 +358,9 @@ export default function Page() {
               <p className="text-body-sm font-body-sm text-on-surface-variant mt-1">Only aggregated monthly totals are shared, not raw transactions.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-              <input defaultChecked={true} className="sr-only permission-toggle" type="checkbox"/>
-              <div className="toggle-bg w-11 h-6 bg-surface-container-highest rounded-full transition-colors relative">
-              <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+              <input checked={sources.PAYONEER} onChange={() => handleToggle("PAYONEER")} className="sr-only permission-toggle" type="checkbox"/>
+              <div className={`w-11 h-6 rounded-full transition-colors relative ${sources.PAYONEER ? 'bg-primary' : 'bg-surface-container-highest'}`}>
+              <div className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform ${sources.PAYONEER ? 'left-6' : 'left-1'}`}></div>
               </div>
               </label>
               </div>
@@ -323,9 +372,9 @@ export default function Page() {
               <p className="text-body-sm font-body-sm text-on-surface-variant mt-1">Only aggregated monthly totals are shared, not raw transactions.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-              <input defaultChecked={true} className="sr-only permission-toggle" type="checkbox"/>
-              <div className="toggle-bg w-11 h-6 bg-surface-container-highest rounded-full transition-colors relative">
-              <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+              <input checked={sources.BANK_TRANSFER} onChange={() => handleToggle("BANK_TRANSFER")} className="sr-only permission-toggle" type="checkbox"/>
+              <div className={`w-11 h-6 rounded-full transition-colors relative ${sources.BANK_TRANSFER ? 'bg-primary' : 'bg-surface-container-highest'}`}>
+              <div className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform ${sources.BANK_TRANSFER ? 'left-6' : 'left-1'}`}></div>
               </div>
               </label>
               </div>
@@ -337,9 +386,9 @@ export default function Page() {
               <p className="text-body-sm font-body-sm text-on-surface-variant mt-1">Only aggregated monthly totals are shared, not raw transactions.</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-              <input className="sr-only permission-toggle" type="checkbox"/>
-              <div className="toggle-bg w-11 h-6 bg-surface-container-highest rounded-full transition-colors relative">
-              <div className="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+              <input checked={sources.LOCAL_INVOICING} onChange={() => handleToggle("LOCAL_INVOICING")} className="sr-only permission-toggle" type="checkbox"/>
+              <div className={`w-11 h-6 rounded-full transition-colors relative ${sources.LOCAL_INVOICING ? 'bg-primary' : 'bg-surface-container-highest'}`}>
+              <div className={`absolute top-1 bg-white w-4 h-4 rounded-full transition-transform ${sources.LOCAL_INVOICING ? 'left-6' : 'left-1'}`}></div>
               </div>
               </label>
               </div>
@@ -353,21 +402,23 @@ export default function Page() {
                                       </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/*  One-time snapshot  */}
-              <button className="p-4 rounded-xl border border-outline-variant text-left hover:border-primary transition-all duration-200 focus:ring-2 focus:ring-primary/20">
-              <p className="text-label-md font-label-md text-on-surface">One-time snapshot</p>
+              <button onClick={() => setDuration("ONE_TIME")} className={`p-4 rounded-xl text-left transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${duration === "ONE_TIME" ? "border-2 border-primary bg-primary-container/5" : "border border-outline-variant"}`}>
+              <p className={`text-label-md font-label-md ${duration === "ONE_TIME" ? "text-primary" : "text-on-surface"}`}>One-time snapshot</p>
               <p className="text-label-sm font-label-sm text-on-surface-variant mt-1">Immediate data pull only</p>
               </button>
-              {/*  3 months  */}
-              <button className="p-4 rounded-xl border border-outline-variant text-left hover:border-primary transition-all duration-200 focus:ring-2 focus:ring-primary/20">
+              {/*  3 months (just map to ROLLING_6MO for simplicity in this demo or keep static) */}
+              <button onClick={() => setDuration("ROLLING_6MO")} className={`p-4 rounded-xl text-left transition-all duration-200 focus:ring-2 focus:ring-primary/20 border border-outline-variant`}>
               <p className="text-label-md font-label-md text-on-surface">3 months</p>
               <p className="text-label-sm font-label-sm text-on-surface-variant mt-1">Limited term access</p>
               </button>
               {/*  6 months rolling access (Selected)  */}
-              <button className="p-4 rounded-xl border-2 border-primary bg-primary-container/5 text-left transition-all duration-200 relative overflow-hidden group">
-              <div className="absolute top-2 right-2">
-              <span className="material-symbols-outlined text-primary text-lg" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
-              </div>
-              <p className="text-label-md font-label-md text-primary">6 months rolling access</p>
+              <button onClick={() => setDuration("ROLLING_6MO")} className={`p-4 rounded-xl text-left transition-all duration-200 relative overflow-hidden group ${duration === "ROLLING_6MO" ? "border-2 border-primary bg-primary-container/5" : "border border-outline-variant"}`}>
+              {duration === "ROLLING_6MO" && (
+                <div className="absolute top-2 right-2">
+                <span className="material-symbols-outlined text-primary text-lg" style={{"fontVariationSettings":"'FILL' 1"}}>check_circle</span>
+                </div>
+              )}
+              <p className={`text-label-md font-label-md ${duration === "ROLLING_6MO" ? "text-primary" : "text-on-surface"}`}>6 months rolling access</p>
               <p className="text-label-sm font-label-sm text-on-surface-variant mt-1">Continuous verification</p>
               </button>
               </div>
@@ -382,18 +433,24 @@ export default function Page() {
               <div className="space-y-3">
               <p className="text-label-sm font-label-sm text-primary uppercase tracking-widest">Shared with UBL</p>
               <ul className="space-y-2">
-              <li className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-              <span className="text-body-sm font-body-sm">Monthly income averages</span>
-              </li>
-              <li className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-              <span className="text-body-sm font-body-sm">Income consistency metrics</span>
-              </li>
-              <li className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-              <span className="text-body-sm font-body-sm">Growth &amp; trend analysis</span>
-              </li>
+              {sources.PAYONEER && (
+                <li className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                <span className="text-body-sm font-body-sm">Payoneer income averages</span>
+                </li>
+              )}
+              {sources.BANK_TRANSFER && (
+                <li className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                <span className="text-body-sm font-body-sm">Direct Bank consistency metrics</span>
+                </li>
+              )}
+              {sources.LOCAL_INVOICING && (
+                <li className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                <span className="text-body-sm font-body-sm">Local Invoice growth analysis</span>
+                </li>
+              )}
               <li className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[#D4AF37] text-sm" style={{"fontVariationSettings":"'FILL' 1"}}>stars</span>
               <span className="text-body-sm font-body-sm font-bold">IVS Score (Verification Grade)</span>
@@ -413,17 +470,19 @@ export default function Page() {
               <span className="material-symbols-outlined text-error text-sm">cancel</span>
               <span className="text-body-sm font-body-sm text-on-surface-variant">Private client names</span>
               </li>
-              <li className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-error text-sm">cancel</span>
-              <span className="text-body-sm font-body-sm text-on-surface-variant">Individual invoice line items</span>
-              </li>
+              {!sources.LOCAL_INVOICING && (
+                <li className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-error text-sm">cancel</span>
+                <span className="text-body-sm font-body-sm text-on-surface-variant">Local invoice details</span>
+                </li>
+              )}
               </ul>
               </div>
               {/*  CTA Actions  */}
               <div className="pt-6 space-y-3">
-              <button className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+              <button disabled={loading} onClick={handleGrant} className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-75">
               <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>enhanced_encryption</span>
-                                                  Grant secure consent
+                                                  {loading ? "Granting..." : "Grant secure consent"}
                                               </button>
               <button className="w-full bg-transparent border-2 border-secondary text-secondary py-4 rounded-xl font-bold hover:bg-secondary/5 active:scale-[0.98] transition-all">
                                                   Save for later
@@ -460,9 +519,6 @@ export default function Page() {
                               End-to-End Encrypted
                           </span>
               </div>
-              <div>
-                          © 2024 VaultTrust Stewardship
-                      </div>
               </footer>
             </div>
             

@@ -1,13 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import FreelancerSidebar from "@/components/FreelancerSidebar";
+import { fetchWithAuth } from "@/lib/fetch_client";
 
 export default function Page() {
-  // TODO: Fetch computed Trust Score and income reliability metrics (/api/v1/profile/reliability) based on linked accounts.
+  const [reliability, setReliability] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [consentActive, setConsentActive] = useState(true);
+  useEffect(() => {
+    const fetchReliability = async () => {
+      try {
+        const res = await fetchWithAuth("/api/v1/profile/reliability");
+        const data = await res.json();
+        if (data.success) {
+          setReliability(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReliability();
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -65,6 +83,9 @@ export default function Page() {
       }
     }
   };
+
+  const ivs = reliability?.scores?.ivs || 0;
+  const strokeDashoffset = 251.2 - (251.2 * ivs) / 100;
 
   return (
     <>
@@ -134,30 +155,30 @@ export default function Page() {
       </div>
       <div className="flex flex-col md:flex-row items-center gap-stack-lg">
       <div className="flex flex-col items-center">
-      <div className="gauge-container">
-      <svg className="w-full" viewBox="0 0 200 100">
-      <path className="gauge-path" d="M20,90 A80,80 0 0,1 180,90"></path>
-      <path className="gauge-fill" d="M20,90 A80,80 0 0,1 180,90"></path>
+      <div className="gauge-container relative w-48 h-24">
+      <svg className="w-full h-full" viewBox="0 0 200 100">
+      <path className="stroke-surface-container-highest" d="M20,90 A80,80 0 0,1 180,90" fill="none" strokeWidth="16" strokeLinecap="round"></path>
+      <path className="stroke-primary" d="M20,90 A80,80 0 0,1 180,90" fill="none" strokeWidth="16" strokeLinecap="round" strokeDasharray="251.2" strokeDashoffset={strokeDashoffset}></path>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-      <span className="text-headline-lg font-headline-lg text-primary">82</span>
+      <span className="text-headline-lg font-headline-lg text-primary">{ivs}</span>
       <span className="text-label-sm font-label-sm text-secondary uppercase tracking-widest">Trust Score</span>
       </div>
       </div>
       <div className="mt-4 px-4 py-1 bg-primary/5 rounded-full">
-      <span className="text-primary font-bold text-body-md">Score 82 - Strong</span>
+      <span className="text-primary font-bold text-body-md">Score {ivs} - {ivs >= 80 ? "Exceptional" : ivs >= 60 ? "Strong" : "Moderate"}</span>
       </div>
       </div>
       <div className="flex-1 space-y-stack-md">
       <h3 className="text-headline-sm font-headline-sm text-primary">Financial Reliability</h3>
       <p className="text-body-md text-on-surface-variant leading-relaxed">
-                                          Your profile demonstrates exceptional stability. This human-friendly score indicates a high likelihood of consistent future earnings based on 18 months of historical freelancer platform data.
-                                      </p>
+        Your profile demonstrates {ivs >= 80 ? "exceptional" : ivs >= 60 ? "strong" : "stable"} reliability. This score indicates a high likelihood of consistent future earnings based on historical freelancer platform data.
+      </p>
       <div className="flex items-start gap-2 p-3 bg-surface-container rounded-xl">
       <span className="material-symbols-outlined text-[20px] text-primary mt-0.5">info</span>
       <p className="text-body-sm text-on-surface-variant italic">
-                                              Score is an indicator, not a final lending decision.
-                                          </p>
+        Score is calculated on-chain using multi-channel mathematical modeling.
+      </p>
       </div>
       </div>
       </div>
@@ -169,13 +190,15 @@ export default function Page() {
       <div className="flex justify-between items-start">
       <div>
       <p className="text-label-sm font-label-sm text-on-surface-variant">Average Monthly</p>
-      <h4 className="text-headline-sm font-headline-sm text-primary mt-1">PKR 198,000</h4>
+      <h4 className="text-headline-sm font-headline-sm text-primary mt-1">
+        PKR {reliability?.scores?.avgMonthlyIncome?.toLocaleString() || "0"}
+      </h4>
       </div>
       <span className="material-symbols-outlined text-primary bg-primary/5 p-2 rounded-lg">account_balance_wallet</span>
       </div>
       <div className="mt-4 flex items-center gap-1 text-primary text-label-sm">
       <span className="material-symbols-outlined text-sm">trending_up</span>
-      <span>Above average for your sector</span>
+      <span>Calculated over last 6 months</span>
       </div>
       </div>
       {/*  Consistency  */}
@@ -183,39 +206,72 @@ export default function Page() {
       <div className="flex justify-between items-start">
       <div>
       <p className="text-label-sm font-label-sm text-on-surface-variant">Consistency Rank</p>
-      <h4 className="text-headline-sm font-headline-sm text-secondary mt-1">High Consistency</h4>
+      <h4 className="text-headline-sm font-headline-sm text-secondary mt-1">
+        {reliability?.scores?.consistency ? (reliability.scores.consistency * 100).toFixed(0) : "0"}% Stable
+      </h4>
       </div>
       <span className="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">rebase_edit</span>
       </div>
-      <p className="mt-4 text-body-sm text-on-surface-variant">98% predictable income flow.</p>
+      <p className="mt-4 text-body-sm text-on-surface-variant">Low variance in monthly earnings.</p>
       </div>
       {/*  Trend  */}
-      <div className="bg-surface-container-lowest p-stack-md rounded-card shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border-l-4 border-tertiary-container">
+      <div className="bg-surface-container-lowest p-stack-md rounded-card shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border-l-4 border-tertiary">
       <div className="flex justify-between items-start">
       <div>
       <p className="text-label-sm font-label-sm text-on-surface-variant">Income Velocity</p>
-      <h4 className="text-headline-sm font-headline-sm text-tertiary mt-1">Growing Trend</h4>
+      <h4 className="text-headline-sm font-headline-sm text-tertiary mt-1">
+        {reliability?.scores?.trend || "STABLE"}
+      </h4>
       </div>
       <span className="material-symbols-outlined text-tertiary bg-tertiary/5 p-2 rounded-lg">show_chart</span>
       </div>
-      <p className="mt-4 text-body-sm text-on-surface-variant">+12% growth over last quarter.</p>
+      <p className="mt-4 text-body-sm text-on-surface-variant">Computed using linear regression slope.</p>
       </div>
       {/*  Diversity  */}
       <div className="bg-surface-container-lowest p-stack-md rounded-card shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border-l-4 border-on-primary-container">
       <div className="flex justify-between items-start">
       <div>
       <p className="text-label-sm font-label-sm text-on-surface-variant">Income Sources</p>
-      <h4 className="text-headline-sm font-headline-sm text-on-primary-fixed-variant mt-1">Healthy Diversity</h4>
+      <h4 className="text-headline-sm font-headline-sm text-on-primary-fixed-variant mt-1">
+        {reliability?.scores?.diversity ? `Score ${Math.round(reliability?.scores?.diversity * 100)}` : "High Diversity"}
+      </h4>
       </div>
       <span className="material-symbols-outlined text-on-primary-fixed-variant bg-on-primary-container/10 p-2 rounded-lg">hub</span>
       </div>
-      <p className="mt-4 text-body-sm text-on-surface-variant">Spread across 4 major clients.</p>
+      <p className="mt-4 text-body-sm text-on-surface-variant">Spread across multiple channels.</p>
       </div>
       </div>
       </section>
       {/*  Right Column: "What the Bank Sees"  */}
-      
-      <FreelancerSidebar />
+      <section className="col-span-12 lg:col-span-5 space-y-gutter">
+        <div className="bg-surface-container-lowest p-8 rounded-card shadow-lg border border-outline-variant/30">
+          <h4 className="text-headline-sm font-headline-sm text-primary mb-2">What the Bank Sees</h4>
+          <p className="text-body-sm text-on-surface-variant mb-6">
+            Demonstration of data minimization. Banks do not see raw transactions or private client identities.
+          </p>
+          <div className="space-y-6">
+            <div className="p-4 bg-surface-container rounded-xl">
+              <span className="text-label-sm font-bold text-on-surface-variant block mb-1">Freelancer Name</span>
+              <p className="text-body-md font-bold text-on-surface">{reliability?.userName || "Ahmed Raza"}</p>
+            </div>
+            <div className="p-4 bg-surface-container rounded-xl">
+              <span className="text-label-sm font-bold text-on-surface-variant block mb-1">IVS Verification Score</span>
+              <div className="flex items-center gap-2">
+                <span className="text-headline-md font-bold text-primary">{ivs}</span>
+                <span className="text-body-sm bg-primary/10 text-primary px-3 py-0.5 rounded-full font-bold">EXCEPTIONAL GRADE</span>
+              </div>
+            </div>
+            <div className="p-4 bg-surface-container rounded-xl">
+              <span className="text-label-sm font-bold text-on-surface-variant block mb-1">Verified Average Monthly Income</span>
+              <p className="text-headline-sm font-bold text-on-surface">PKR {reliability?.scores?.avgMonthlyIncome?.toLocaleString() || "0"}</p>
+            </div>
+            <div className="p-4 bg-surface-container rounded-xl border border-dashed border-outline">
+              <span className="text-label-sm font-bold text-error block mb-1">🔒 Locked / Restricted Data</span>
+              <p className="text-body-sm text-on-surface-variant">Raw transaction history &amp; statement line items are suppressed.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       </div>
       </div>
