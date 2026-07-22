@@ -40,6 +40,14 @@ yarn-error.log*
 # allow the example template
 !.env.example
 
+# solana keypairs — never commit private keys
+/keys/
+*.keypair.json
+
+# anchor / rust build artifacts (includes program keypairs under target/deploy)
+/target/
+/.anchor/
+
 # vercel
 .vercel
 

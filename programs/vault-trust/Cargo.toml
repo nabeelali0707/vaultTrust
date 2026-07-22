@@ -1,0 +1,20 @@
+[package]
+name = "vault-trust"
+version = "0.1.0"
+description = "VaultTrust - Consent-based income verification"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "1.0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+debug = false
+overflow-checks = true
