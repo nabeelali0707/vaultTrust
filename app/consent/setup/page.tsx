@@ -14,6 +14,7 @@ export default function Page() {
   });
   const [duration, setDuration] = useState<"ONE_TIME" | "ROLLING_6MO">("ROLLING_6MO");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleToggle = (platform: "PAYONEER" | "BANK_TRANSFER" | "LOCAL_INVOICING") => {
     setSources((prev) => ({
@@ -24,6 +25,7 @@ export default function Page() {
 
   const handleGrant = async () => {
     setLoading(true);
+    setErrorMessage(null);
     const activeSources = Object.keys(sources).filter(
       (key) => sources[key as keyof typeof sources]
     );
@@ -38,15 +40,31 @@ export default function Page() {
           bankId: "ubl-bank-id",
         }),
       });
-      const data = await res.json();
+
+      // Even a network-level failure to reach our own API (not Solana) should
+      // never silently disappear — surface it clearly rather than throwing
+      // inside res.json() with no context.
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        setErrorMessage("The server returned an unexpected response. Please try again in a moment.");
+        return;
+      }
+
       if (data.success) {
+        // The ledger write is always guaranteed to have succeeded here —
+        // blockchain confirmation is best-effort and never blocks this step,
+        // so a pending/failed chain write is not a reason to alarm the user.
         router.push("/consent/active");
       } else {
-        alert("Failed to grant consent: " + data.error);
+        setErrorMessage(data.error || "Failed to grant consent. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error granting consent.");
+      setErrorMessage(
+        "Could not reach the server. Check your connection and try again — no changes were saved."
+      );
     } finally {
       setLoading(false);
     }
@@ -264,6 +282,12 @@ export default function Page() {
               </main>
               {/*  Fixed Bottom Button  */}
               <div className="fixed bottom-0 left-0 right-0 p-margin-mobile bg-surface/90 backdrop-blur-xl border-t border-outline-variant/10">
+              {errorMessage && (
+                <div className="mb-3 p-3 bg-error/10 border border-error/20 rounded-xl flex items-start gap-2">
+                  <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
+                  <p className="text-body-sm text-error">{errorMessage}</p>
+                </div>
+              )}
               <button disabled={loading} onClick={handleGrant} className="w-full bg-primary-container text-on-primary font-headline-sm py-5 rounded-[20px] shadow-lg active:scale-95 transition-all duration-200 flex items-center justify-center gap-3 group disabled:opacity-75">
               <span>{loading ? "Granting..." : "Grant secure consent"}</span>
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
@@ -480,6 +504,12 @@ export default function Page() {
               </div>
               {/*  CTA Actions  */}
               <div className="pt-6 space-y-3">
+              {errorMessage && (
+                <div className="p-3 bg-error/10 border border-error/20 rounded-xl flex items-start gap-2">
+                  <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
+                  <p className="text-body-sm text-error">{errorMessage}</p>
+                </div>
+              )}
               <button disabled={loading} onClick={handleGrant} className="w-full bg-primary text-on-primary py-4 rounded-xl font-bold hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-75">
               <span className="material-symbols-outlined" style={{"fontVariationSettings":"'FILL' 1"}}>enhanced_encryption</span>
                                                   {loading ? "Granting..." : "Grant secure consent"}

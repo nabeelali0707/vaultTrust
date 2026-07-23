@@ -9,6 +9,8 @@ export default function Page() {
   const [activeConsent, setActiveConsent] = useState<any>(null);
   const [consentActive, setConsentActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [verification, setVerification] = useState<any>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchActive = async () => {
@@ -18,6 +20,14 @@ export default function Page() {
         if (data.success && data.consent) {
           setActiveConsent(data.consent);
           setConsentActive(true);
+
+          try {
+            const verifyRes = await fetchWithAuth(`/api/v1/consent/${data.consent.id}/verify`);
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) setVerification(verifyData);
+          } catch (verifyErr) {
+            console.error("Verification check failed:", verifyErr);
+          }
         } else {
           setConsentActive(false);
         }
@@ -74,6 +84,7 @@ export default function Page() {
   };
 
   const executeRevoke = async () => {
+    setRevokeError(null);
     try {
       const res = await fetchWithAuth("/api/v1/consent/revoke", {
         method: "POST",
@@ -82,6 +93,8 @@ export default function Page() {
       });
       const data = await res.json();
       if (data.success) {
+        // The ledger revoke is guaranteed regardless of blockchain status —
+        // access is already cut off, so this is a genuine success either way.
         setConsentActive(false);
         setActiveConsent(null);
         closeModal();
@@ -95,11 +108,11 @@ export default function Page() {
           }
         }
       } else {
-        alert("Failed to revoke: " + data.error);
+        setRevokeError(data.error || "Failed to revoke access. Please try again.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error revoking consent.");
+      setRevokeError("Could not reach the server. Check your connection and try again.");
     }
   };
 
@@ -158,9 +171,29 @@ export default function Page() {
         </h4>
         <span className="material-symbols-outlined text-[18px] text-tertiary">verified</span>
         </div>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-3 mt-1 flex-wrap">
         <span className="px-3 py-1 bg-[#E8F5E9] text-[#004A3B] rounded-full text-[12px] font-bold">Active</span>
-        <span className="text-label-sm font-label-sm text-on-surface-variant">Last accessed: Just now</span>
+        {verification?.status === "VERIFIED" && (
+          <span className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-[12px] font-bold border border-primary/20">
+            <span className="material-symbols-outlined text-[14px]" style={{"fontVariationSettings":"'FILL' 1"}}>verified</span>
+            Blockchain-Confirmed
+          </span>
+        )}
+        {verification?.status === "BLOCKCHAIN_PENDING" && (
+          <span className="flex items-center gap-1 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-[12px] font-bold border border-secondary/20">
+            <span className="material-symbols-outlined text-[14px]">schedule</span>
+            Simulated (Blockchain Pending)
+          </span>
+        )}
+        {verification?.status === "TAMPERED" && (
+          <span className="flex items-center gap-1 px-3 py-1 bg-error/10 text-error rounded-full text-[12px] font-bold border border-error/20">
+            <span className="material-symbols-outlined text-[14px]" style={{"fontVariationSettings":"'FILL' 1"}}>warning</span>
+            Tamper Detected
+          </span>
+        )}
+        <span className="text-label-sm font-label-sm text-on-surface-variant">
+          Granted: {activeConsent.grantedAt ? new Date(activeConsent.grantedAt).toLocaleString() : "Unknown"}
+        </span>
         </div>
         </div>
         </div>
@@ -197,6 +230,26 @@ export default function Page() {
         <span className="material-symbols-outlined text-secondary" style={{"fontVariationSettings":"'FILL' 1"}}>info</span>
         <p className="text-body-sm text-on-surface-variant">This consent is protected by <strong>End-to-End Institutional Encryption</strong>. Data retrieval is limited to read-only access for the specified purpose.</p>
         </div>
+        {verification?.transactionSignature && (
+          <div className="mt-4 p-4 bg-surface rounded-lg border border-outline-variant/30 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="material-symbols-outlined text-primary" style={{"fontVariationSettings":"'FILL' 1"}}>link</span>
+              <div className="min-w-0">
+                <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Solana Transaction Signature</p>
+                <p className="text-body-sm font-mono text-on-surface truncate">{verification.transactionSignature}</p>
+              </div>
+            </div>
+            <a
+              href={`https://explorer.solana.com/tx/${verification.transactionSignature}?cluster=devnet`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 px-4 py-2 border border-primary text-primary rounded-lg text-label-sm font-bold hover:bg-primary/5 transition-all whitespace-nowrap"
+            >
+              View on Explorer
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            </a>
+          </div>
+        )}
         </div>
       ) : (
         <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] p-8 border border-outline-variant/20 text-center flex flex-col items-center justify-center min-h-[300px]">
@@ -286,6 +339,12 @@ export default function Page() {
       <p className="text-body-md text-on-surface-variant leading-relaxed">
                           Access lost immediately, revocation recorded in audit trail. This action cannot be undone without a new application process.
                       </p>
+      {revokeError && (
+        <div className="mt-4 p-3 bg-error/10 border border-error/20 rounded-xl flex items-start gap-2">
+          <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
+          <p className="text-body-sm text-error">{revokeError}</p>
+        </div>
+      )}
       <div className="mt-8 flex flex-col gap-3">
       <button className="w-full py-4 bg-error text-on-error rounded-xl font-bold text-label-md shadow-lg shadow-error/20 hover:bg-error/90 transition-all active:scale-95" onClick={() => { executeRevoke() }}>
                               Confirm Revocation

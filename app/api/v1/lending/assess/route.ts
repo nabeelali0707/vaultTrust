@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { dbService, Consent } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth_helper";
 import { computeIncomeScore } from "@/lib/scoring";
 import { appendLedgerEntry } from "@/lib/ledger";
 import { isRateLimited } from "@/lib/rate_limiter";
+import { logBankAccess as logBankAccessOnChain } from "@/lib/blockchain/client/consent-client";
 
 export async function GET(request: Request) {
   try {
@@ -65,24 +66,69 @@ export async function GET(request: Request) {
       // 3. Compute score metrics
       const scores = computeIncomeScore(consentedTransactions);
 
-      // 4. Append BANK_ACCESS ledger entry
-      await appendLedgerEntry(activeConsent.id, "BANK_ACCESS", {
-        bankId,
-        accessedAt: new Date().toISOString(),
-        accessedFields: ["avgMonthlyIncome", "coefficientOfVariation", "trend", "ivs"],
-      });
+      // 4. Dual-write access logging (ledger + best-effort blockchain), scheduled
+      // via `after()` so it never delays this response — dashboard load time
+      // must not depend on ledger/blockchain write latency.
+      const accessedAt = new Date().toISOString();
+      const clientIp = request.headers.get("x-forwarded-for") || "unknown";
 
-      // 5. Structured operational audit logging for debugging
-      console.log(
-        "[AUDIT LOG - BANK_ACCESS]",
-        JSON.stringify({
-          bankId,
-          freelancerId,
-          consentId: activeConsent.id,
-          timestamp: new Date().toISOString(),
-          ip: request.headers.get("x-forwarded-for") || "unknown",
-        })
-      );
+      after(async () => {
+        // Guaranteed write — independent of blockchain availability.
+        try {
+          await appendLedgerEntry(activeConsent.id, "BANK_ACCESS", {
+            bankId,
+            accessedAt,
+            accessedFields: ["avgMonthlyIncome", "coefficientOfVariation", "trend", "ivs"],
+          });
+        } catch (ledgerError) {
+          console.error("[BANK_ACCESS LEDGER WRITE FAILED]", { consentId: activeConsent.id, ledgerError });
+        }
+
+        // Best-effort dual-write to Solana devnet.
+        let chainResult: { signature?: string; bankWallet?: string } = {};
+        try {
+          const onChain = await logBankAccessOnChain({
+            freelancerUid: freelancerId,
+            bankUid: bankId,
+          });
+          chainResult = { signature: onChain.signature, bankWallet: onChain.bankWallet };
+          await dbService.updateConsent(activeConsent.id, {
+            blockchainStatus: "CONFIRMED",
+            solanaTxSignature: onChain.signature,
+          });
+        } catch (chainError: any) {
+          console.error("[BLOCKCHAIN WRITE FAILED - log_bank_access]", {
+            consentId: activeConsent.id,
+            error: chainError.message || chainError,
+          });
+          try {
+            await dbService.updateConsent(activeConsent.id, {
+              blockchainStatus: "FAILED",
+              blockchainError: chainError.message || String(chainError),
+            });
+          } catch (statusUpdateError) {
+            console.error("[FAILED TO RECORD BLOCKCHAIN FAILURE STATUS]", {
+              consentId: activeConsent.id,
+              statusUpdateError,
+            });
+          }
+        }
+
+        // Structured operational audit log — Consent ID, Bank ID, Timestamp,
+        // Wallet, Transaction Signature (if available).
+        console.log(
+          "[AUDIT LOG - BANK_ACCESS]",
+          JSON.stringify({
+            consentId: activeConsent.id,
+            bankId,
+            freelancerId,
+            timestamp: accessedAt,
+            bankWallet: chainResult.bankWallet || null,
+            solanaTxSignature: chainResult.signature || null,
+            ip: clientIp,
+          })
+        );
+      });
 
       // 6. Data minimization response payload
       const responsePayload: any = {

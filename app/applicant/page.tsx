@@ -10,6 +10,7 @@ export default function Page() {
   const [applicant, setApplicant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<any>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -27,6 +28,17 @@ export default function Page() {
         const data = await res.json();
         if (data.success) {
           setApplicant(data);
+
+          const consentId = data.consentInfo?.consentId;
+          if (consentId) {
+            try {
+              const verifyRes = await fetchWithAuth(`/api/v1/consent/${consentId}/verify`);
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) setVerification(verifyData);
+            } catch (verifyErr) {
+              console.error("Verification check failed:", verifyErr);
+            }
+          }
         } else {
           setError(data.error);
         }
@@ -287,13 +299,39 @@ export default function Page() {
 
               {/*  Audit Log Card  */}
               <div className="bg-surface-container-lowest p-stack-lg rounded-2xl shadow-[0px_4px_20px_rgba(0,0,0,0.04)] border border-white">
-                <h4 className="text-label-md text-on-surface-variant mb-4 font-bold">Access Audit Log</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-label-md text-on-surface-variant font-bold">Access Audit Log</h4>
+                  {verification?.status === "VERIFIED" && (
+                    <span className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold border border-primary/20">
+                      <span className="material-symbols-outlined text-[13px]" style={{"fontVariationSettings":"'FILL' 1"}}>verified</span>
+                      Blockchain-Confirmed
+                    </span>
+                  )}
+                  {verification?.status === "BLOCKCHAIN_PENDING" && (
+                    <span className="flex items-center gap-1 px-2.5 py-1 bg-secondary/10 text-secondary rounded-full text-[11px] font-bold border border-secondary/20">
+                      <span className="material-symbols-outlined text-[13px]">schedule</span>
+                      Simulated
+                    </span>
+                  )}
+                  {verification?.status === "TAMPERED" && (
+                    <span className="flex items-center gap-1 px-2.5 py-1 bg-error/10 text-error rounded-full text-[11px] font-bold border border-error/20">
+                      <span className="material-symbols-outlined text-[13px]" style={{"fontVariationSettings":"'FILL' 1"}}>warning</span>
+                      Tampered
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-4">
                   <div className="flex gap-3">
-                    <div className="mt-1 w-2 h-2 rounded-full bg-[#008080]"></div>
+                    <div className={`mt-1 w-2 h-2 rounded-full ${applicant.consentInfo ? "bg-[#008080]" : "bg-outline"}`}></div>
                     <div>
-                      <p className="text-body-sm text-on-surface">UBL Access Log entry generated</p>
-                      <p className="text-label-sm text-on-surface-variant">Just now</p>
+                      <p className="text-body-sm text-on-surface">
+                        Consent Active: {applicant.consentInfo ? "Yes" : "No"}
+                      </p>
+                      <p className="text-label-sm text-on-surface-variant">
+                        {verification
+                          ? `Local ledger: ${verification.localLedger.entryCount} entries, ${verification.localLedger.intact ? "intact" : "BROKEN"}`
+                          : "Checking ledger integrity..."}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-3 opacity-60">
@@ -304,6 +342,21 @@ export default function Page() {
                     </div>
                   </div>
                 </div>
+                {verification?.transactionSignature && (
+                  <div className="mt-4 p-3 bg-surface rounded-lg border border-outline-variant/30">
+                    <p className="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Tx Signature</p>
+                    <p className="text-[12px] font-mono text-on-surface truncate mb-2">{verification.transactionSignature}</p>
+                    <a
+                      href={`https://explorer.solana.com/tx/${verification.transactionSignature}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-primary text-label-sm font-bold hover:underline"
+                    >
+                      View on Devnet Explorer
+                      <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                  </div>
+                )}
                 <Link href="/audit">
                   <button className="w-full mt-6 text-primary text-label-md font-bold hover:underline text-left">View Global Consent Registry</button>
                 </Link>

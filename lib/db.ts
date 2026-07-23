@@ -47,6 +47,12 @@ export interface Consent {
   status: "ACTIVE" | "REVOKED";
   grantedAt: string;
   revokedAt: string | null;
+  // Blockchain anchoring (best-effort; the ledger fields above are the
+  // guaranteed source of truth regardless of blockchain availability).
+  blockchainStatus?: "CONFIRMED" | "FAILED" | "PENDING_RETRY";
+  solanaTxSignature?: string;
+  solanaConsentPda?: string;
+  blockchainError?: string;
 }
 
 export interface ConsentLedgerEntry {
@@ -255,6 +261,14 @@ export const dbService = {
   async updateConsent(id: string, fields: Partial<Consent>): Promise<void> {
     const firestore = getAdminFirestore();
     await firestore.collection("consents").doc(id).update(fields);
+  },
+
+  // Compensating-action helper for rollback safety: used when a later step
+  // in a multi-write sequence (e.g. the ledger append after consent creation)
+  // fails, so we don't leave an orphaned consent record with no audit trail.
+  async deleteConsent(id: string): Promise<void> {
+    const firestore = getAdminFirestore();
+    await firestore.collection("consents").doc(id).delete();
   },
 
   // --- LEDGER ---

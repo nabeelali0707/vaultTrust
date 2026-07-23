@@ -1,0 +1,580 @@
+{
+  "address": "Bb8QJuK5CvWrhFW8S6Y1Djsmyn8L9jUXiVWEoEDqZDSu",
+  "metadata": {
+    "name": "vault_trust",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "VaultTrust - Consent-based income verification"
+  },
+  "instructions": [
+    {
+      "name": "grant_consent",
+      "discriminator": [
+        174,
+        67,
+        143,
+        95,
+        73,
+        190,
+        40,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "consent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_authority"
+              },
+              {
+                "kind": "account",
+                "path": "bank_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_authority",
+          "signer": true
+        },
+        {
+          "name": "bank_wallet"
+        },
+        {
+          "name": "fee_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "consent_id",
+          "type": "string"
+        },
+        {
+          "name": "purpose_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "scope_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "expiry",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "log_bank_access",
+      "discriminator": [
+        222,
+        122,
+        152,
+        90,
+        171,
+        104,
+        123,
+        228
+      ],
+      "accounts": [
+        {
+          "name": "consent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_authority"
+              },
+              {
+                "kind": "account",
+                "path": "bank_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_authority"
+        },
+        {
+          "name": "bank_wallet",
+          "signer": true,
+          "relations": [
+            "consent"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revoke_consent",
+      "discriminator": [
+        36,
+        0,
+        100,
+        148,
+        132,
+        131,
+        112,
+        76
+      ],
+      "accounts": [
+        {
+          "name": "consent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_authority"
+              },
+              {
+                "kind": "account",
+                "path": "bank_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_authority",
+          "signer": true,
+          "relations": [
+            "consent"
+          ]
+        },
+        {
+          "name": "bank_wallet"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_consent",
+      "discriminator": [
+        98,
+        24,
+        115,
+        204,
+        222,
+        141,
+        66,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "consent",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  115,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user_authority"
+              },
+              {
+                "kind": "account",
+                "path": "bank_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user_authority",
+          "signer": true,
+          "relations": [
+            "consent"
+          ]
+        },
+        {
+          "name": "bank_wallet"
+        }
+      ],
+      "args": [
+        {
+          "name": "purpose_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "scope_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "expiry",
+          "type": "i64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ConsentAccount",
+      "discriminator": [
+        129,
+        26,
+        32,
+        122,
+        68,
+        134,
+        146,
+        154
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BankAccessLogged",
+      "discriminator": [
+        61,
+        215,
+        27,
+        196,
+        84,
+        140,
+        6,
+        85
+      ]
+    },
+    {
+      "name": "ConsentGranted",
+      "discriminator": [
+        151,
+        98,
+        229,
+        56,
+        36,
+        111,
+        88,
+        46
+      ]
+    },
+    {
+      "name": "ConsentRevoked",
+      "discriminator": [
+        56,
+        245,
+        136,
+        57,
+        212,
+        252,
+        122,
+        43
+      ]
+    },
+    {
+      "name": "ConsentUpdated",
+      "discriminator": [
+        61,
+        124,
+        224,
+        3,
+        170,
+        177,
+        128,
+        187
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ConsentNotActive",
+      "msg": "This consent is not active (already revoked)."
+    },
+    {
+      "code": 6001,
+      "name": "ConsentExpired",
+      "msg": "This consent has expired."
+    },
+    {
+      "code": 6002,
+      "name": "Unauthorized",
+      "msg": "Signer is not authorized to perform this action on this consent."
+    },
+    {
+      "code": 6003,
+      "name": "ConsentIdTooLong",
+      "msg": "consent_id exceeds the maximum allowed length."
+    }
+  ],
+  "types": [
+    {
+      "name": "BankAccessLogged",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "consent",
+            "type": "pubkey"
+          },
+          {
+            "name": "bank_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsentAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "consent_id",
+            "type": "string"
+          },
+          {
+            "name": "user_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bank_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "purpose_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "scope_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "granted_at",
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          },
+          {
+            "name": "last_accessed_at",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "ConsentStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsentGranted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "consent",
+            "type": "pubkey"
+          },
+          {
+            "name": "consent_id",
+            "type": "string"
+          },
+          {
+            "name": "user_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bank_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "purpose_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "scope_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsentRevoked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "consent",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsentStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Revoked"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConsentUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "consent",
+            "type": "pubkey"
+          },
+          {
+            "name": "purpose_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "scope_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "expiry",
+            "type": "i64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

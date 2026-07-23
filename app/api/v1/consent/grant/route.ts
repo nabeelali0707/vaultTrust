@@ -3,6 +3,7 @@ import { dbService, Consent } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth_helper";
 import { appendLedgerEntry } from "@/lib/ledger";
 import { isRateLimited } from "@/lib/rate_limiter";
+import { grantConsent as grantConsentOnChain } from "@/lib/blockchain/client/consent-client";
 import { z } from "zod";
 
 const GrantConsentSchema = z.object({
@@ -41,18 +42,37 @@ export async function POST(request: Request) {
 
     const consentId = `${userId}_${bankId}`;
 
-    // 1. Check if there is an active consent, and revoke it first
+    // 1. Check if there is an active consent, and revoke it first.
+    // Rollback safety: if the ledger append fails after the status update
+    // above already succeeded, the old consent would be left marked REVOKED
+    // with no audit trail — compensate by reverting it back to ACTIVE.
     const activeConsent = await dbService.getActiveConsent(userId, bankId);
     if (activeConsent) {
+      const revokedAt = new Date().toISOString();
       await dbService.updateConsent(activeConsent.id, {
         status: "REVOKED",
-        revokedAt: new Date().toISOString(),
+        revokedAt,
       });
-      // Append REVOKE entry for the old policy
-      await appendLedgerEntry(activeConsent.id, "REVOKE", {
-        reason: "Superseded by new consent grant policy",
-        revokedAt: new Date().toISOString(),
-      });
+      try {
+        await appendLedgerEntry(activeConsent.id, "REVOKE", {
+          reason: "Superseded by new consent grant policy",
+          revokedAt,
+        });
+      } catch (ledgerError: any) {
+        console.error("[ROLLBACK] Ledger write failed after revoking superseded consent — reverting to ACTIVE", {
+          consentId: activeConsent.id,
+          ledgerError,
+        });
+        try {
+          await dbService.updateConsent(activeConsent.id, { status: "ACTIVE", revokedAt: null });
+        } catch (rollbackError) {
+          console.error("[ROLLBACK FAILED] Superseded consent could not be reverted — needs manual cleanup", {
+            consentId: activeConsent.id,
+            rollbackError,
+          });
+        }
+        throw new Error("Failed to record consent revocation in the tamper-evident ledger. No changes were saved — please try again.");
+      }
     }
 
     // 2. Create the new Consent record
@@ -71,19 +91,81 @@ export async function POST(request: Request) {
 
     await dbService.createConsent(newConsent);
 
-    // 3. Append the GRANT entry to the ledger
-    const ledgerEntry = await appendLedgerEntry(consentId, "GRANT", {
-      sources,
-      scope,
-      duration: finalDuration,
-      purpose,
-      grantedAt: newConsent.grantedAt,
-    });
+    // 3. Append the GRANT entry to the ledger (guaranteed write — this alone
+    // is sufficient for the request to succeed, independent of blockchain availability).
+    // Rollback safety: if this fails after the consent doc above was already
+    // created, we'd be left with an ACTIVE consent that has no audit trail —
+    // compensate by deleting it so the system never reports success on a
+    // half-completed write.
+    let ledgerEntry;
+    try {
+      ledgerEntry = await appendLedgerEntry(consentId, "GRANT", {
+        sources,
+        scope,
+        duration: finalDuration,
+        purpose,
+        grantedAt: newConsent.grantedAt,
+      });
+    } catch (ledgerError: any) {
+      console.error("[ROLLBACK] Ledger write failed after consent creation — deleting orphaned consent doc", {
+        consentId,
+        ledgerError,
+      });
+      try {
+        await dbService.deleteConsent(consentId);
+      } catch (rollbackError) {
+        console.error("[ROLLBACK FAILED] Orphaned consent doc could not be removed — needs manual cleanup", {
+          consentId,
+          rollbackError,
+        });
+      }
+      throw new Error("Failed to record consent in the tamper-evident ledger. No changes were saved — please try again.");
+    }
+
+    // 4. Best-effort dual-write to Solana devnet. Failures are logged for
+    // retry and never block the response — the ledger write above already
+    // guarantees a tamper-evident record regardless of chain availability.
+    let blockchain: { status: Consent["blockchainStatus"]; signature?: string } = {
+      status: "PENDING_RETRY",
+    };
+    try {
+      const onChain = await grantConsentOnChain({
+        freelancerUid: userId,
+        bankUid: bankId,
+        consentId,
+        purpose,
+        scope,
+        expiryUnixSeconds: 0,
+      });
+      blockchain = { status: "CONFIRMED", signature: onChain.signature };
+      await dbService.updateConsent(consentId, {
+        blockchainStatus: "CONFIRMED",
+        solanaTxSignature: onChain.signature,
+        solanaConsentPda: onChain.consentPda,
+      });
+    } catch (chainError: any) {
+      console.error("[BLOCKCHAIN WRITE FAILED - grant_consent]", {
+        consentId,
+        error: chainError.message || chainError,
+      });
+      blockchain = { status: "FAILED" };
+      // Recording the failure status is itself best-effort — a hiccup here
+      // must never turn an already-successful ledger write into a 500.
+      try {
+        await dbService.updateConsent(consentId, {
+          blockchainStatus: "FAILED",
+          blockchainError: chainError.message || String(chainError),
+        });
+      } catch (statusUpdateError) {
+        console.error("[FAILED TO RECORD BLOCKCHAIN FAILURE STATUS]", { consentId, statusUpdateError });
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      consent: newConsent,
+      consent: { ...newConsent, blockchainStatus: blockchain.status, solanaTxSignature: blockchain.signature },
       ledgerEntry,
+      blockchain,
       message: "Secure consent granted and recorded in tamper-evident ledger.",
     });
   } catch (error: any) {

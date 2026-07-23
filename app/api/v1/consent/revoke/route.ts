@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { dbService } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth_helper";
 import { appendLedgerEntry } from "@/lib/ledger";
+import { revokeConsent as revokeConsentOnChain } from "@/lib/blockchain/client/consent-client";
 import { z } from "zod";
 
 const RevokeConsentSchema = z.object({
@@ -66,23 +67,59 @@ async function handleRevocation(request: Request) {
       });
     }
 
-    // Revoke the consent in the DB
+    // Revoke the consent in the DB (guaranteed write)
     const revokedAt = new Date().toISOString();
     await dbService.updateConsent(consent.id, {
       status: "REVOKED",
       revokedAt,
     });
 
-    // Append REVOKE to the ledger
+    // Append REVOKE to the ledger (guaranteed — sufficient on its own for
+    // the request to succeed, independent of blockchain availability)
     const ledgerEntry = await appendLedgerEntry(consent.id, "REVOKE", {
       reason: "Revoked by user",
       revokedAt,
     });
 
+    // Best-effort dual-write to Solana devnet. Same safety pattern as grant:
+    // never blocks the response, failures are logged for retry.
+    let blockchain: { status: "CONFIRMED" | "FAILED"; signature?: string } = { status: "FAILED" };
+    try {
+      const onChain = await revokeConsentOnChain({
+        freelancerUid: userId,
+        bankUid: consent.bankId,
+      });
+      blockchain = { status: "CONFIRMED", signature: onChain.signature };
+      await dbService.updateConsent(consent.id, {
+        blockchainStatus: "CONFIRMED",
+        solanaTxSignature: onChain.signature,
+      });
+    } catch (chainError: any) {
+      console.error("[BLOCKCHAIN WRITE FAILED - revoke_consent]", {
+        consentId: consent.id,
+        error: chainError.message || chainError,
+      });
+      try {
+        await dbService.updateConsent(consent.id, {
+          blockchainStatus: "FAILED",
+          blockchainError: chainError.message || String(chainError),
+        });
+      } catch (statusUpdateError) {
+        console.error("[FAILED TO RECORD BLOCKCHAIN FAILURE STATUS]", { consentId: consent.id, statusUpdateError });
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      consent: { ...consent, status: "REVOKED", revokedAt },
+      consent: {
+        ...consent,
+        status: "REVOKED",
+        revokedAt,
+        blockchainStatus: blockchain.status,
+        solanaTxSignature: blockchain.signature,
+      },
       ledgerEntry,
+      blockchain,
       message: "Consent successfully revoked and recorded in ledger.",
     });
   } catch (error: any) {

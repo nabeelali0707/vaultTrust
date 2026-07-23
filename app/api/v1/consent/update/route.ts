@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { dbService } from "@/lib/db";
+import { dbService, Consent } from "@/lib/db";
 import { verifyAuthToken } from "@/lib/auth_helper";
 import { appendLedgerEntry } from "@/lib/ledger";
+import { updateConsent as updateConsentOnChain } from "@/lib/blockchain/client/consent-client";
 import { z } from "zod";
 
 const UpdateConsentSchema = z.object({
@@ -58,7 +59,8 @@ export async function PUT(request: Request) {
     };
     await dbService.updateConsent(consent.id, updatedFields);
 
-    // Append SCOPE_CHANGE to the ledger
+    // Append SCOPE_CHANGE to the ledger (guaranteed write — this alone is
+    // sufficient for the request to succeed, independent of blockchain availability)
     const ledgerEntry = await appendLedgerEntry(consent.id, "SCOPE_CHANGE", {
       oldSources: consent.sources,
       oldScope: consent.scope,
@@ -71,10 +73,47 @@ export async function PUT(request: Request) {
       updatedAt: new Date().toISOString(),
     });
 
+    // Best-effort dual-write to Solana devnet. Same safety pattern as
+    // grant/revoke: never blocks the response, failures are logged for retry.
+    let blockchain: { status: Consent["blockchainStatus"]; signature?: string } = { status: "FAILED" };
+    try {
+      const onChain = await updateConsentOnChain({
+        freelancerUid: userId,
+        bankUid: consent.bankId,
+        purpose: validated.purpose,
+        scope: validated.scope,
+        expiryUnixSeconds: 0,
+      });
+      blockchain = { status: "CONFIRMED", signature: onChain.signature };
+      await dbService.updateConsent(consent.id, {
+        blockchainStatus: "CONFIRMED",
+        solanaTxSignature: onChain.signature,
+      });
+    } catch (chainError: any) {
+      console.error("[BLOCKCHAIN WRITE FAILED - update_consent]", {
+        consentId: consent.id,
+        error: chainError.message || chainError,
+      });
+      try {
+        await dbService.updateConsent(consent.id, {
+          blockchainStatus: "FAILED",
+          blockchainError: chainError.message || String(chainError),
+        });
+      } catch (statusUpdateError) {
+        console.error("[FAILED TO RECORD BLOCKCHAIN FAILURE STATUS]", { consentId: consent.id, statusUpdateError });
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      consent: { ...consent, ...updatedFields },
+      consent: {
+        ...consent,
+        ...updatedFields,
+        blockchainStatus: blockchain.status,
+        solanaTxSignature: blockchain.signature,
+      },
       ledgerEntry,
+      blockchain,
       message: "Consent scope updated and recorded in ledger.",
     });
   } catch (error: any) {
